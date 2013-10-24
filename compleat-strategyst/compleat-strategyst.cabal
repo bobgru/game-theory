@@ -1,0 +1,25 @@
+Name:           compleat-strategyst
+Version:        0.1
+Synopsis:       A pure functional game theoretic solver
+Description:
+  A library of functions to represent and solve formal games
+  of size 2 x N, according to the algorithms described in the
+  book "The Compleat Strategyst", by J.D.Williams.
+License:        BSD3
+Build-Type:     Simple
+Author:         Bob Grudem
+Maintainer:     bobgru@hotmail.com
+Cabal-Version:  >= 1.2
+
+Library
+    Exposed-Modules: Game2xN
+    Build-Depends:   base
+
+--Executable trend-analyzer
+--  Build-Depends:  base, OpenGL, parsec, mtl
+--  Main-Is:        SimRunner.hs
+
+--Test-Suite account-tests
+--  Type:           exitcode-stdio-1.0
+--  Main-Is:        AcctTests.hs
+--  Build-Depends:  base
