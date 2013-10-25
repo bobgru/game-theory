@@ -1,5 +1,7 @@
-Analysis of 2 x N games, according to "The Compleat Strategyst", 
-by J.D. Williams.
+Solving 2 x N Games 
+===================
+
+according to _The Compleat Strategyst_, by J.D. Williams.
 
 Bob Grudem
 10/23/2013
@@ -7,15 +9,13 @@ Bob Grudem
 > module Game2xN where
 > import Data.List(maximumBy,minimumBy,sortBy)
 
-2 x N Games: Background
-
-A "game" is a formalized conflict in which there are two players
-with opposing interests. Each player has some number of strategies
+A **game** is a formalized conflict in which there are two players
+with opposing interests. Each player has some number of **strategies**
 according to which to engage the opponent. Taking all combinations 
 of each player's strategies against the other's gives a matrix where
-an entry represents the relative payoff. By convention a positive
-payoff means player 1 wins; negative, player 2. All of the meaning
-of playing the game is encoded into the payoff matrix. Being able
+an entry represents the relative **payoff**. By convention a positive
+payoff means player 1 wins; negative, player 2. _All of the meaning
+of playing the game is encoded into the payoff matrix._ Being able
 to do that is a considerable skill, but here we just assume it's 
 been done. Another assumption we make is that both players know
 all the payoffs.
@@ -32,9 +32,9 @@ the columns.
 
 Solving a game means determining the combination of strategies
 each player should use to maximize the average payoff over
-time, otherwise known as the value. It turns out that some 
-solutions indicate a "pure" strategy in which one is always best,
-and some have a "mixed" meta-strategy in which each pure strategy
+time, otherwise known as the **value**. It turns out that some 
+solutions indicate a **pure strategy** in which one is always best,
+and some have a **mixed meta-strategy** in which each pure strategy
 is used at random but according to a specified distribution.
 
 Solving 2x2 games is simplest. For 2xn and nx2 games, solving means
@@ -115,7 +115,7 @@ the game value.
 Finding a solution involves a succession of ad hoc checks. 
 
 First, if the game has a Pure solution, the payoff matrix will 
-have a "saddlepoint". Player 1 would like to pick a strategy to
+have a **saddlepoint**. Player 1 would like to pick a strategy to
 maximize the payoff to her, but whichever strategy she chooses,
 player 2 may play so as to minimize it. In matrix terms, regardless
 the row player 1 selects, player 2 could, and would like to, take
@@ -124,9 +124,9 @@ payoff, ideally negative, but runs the risk of player 1 getting
 the maximum from his column.
 
 Player 1 can set a lower bound on her payoff, by using the strategy
-with the largest minimum, the "maxmin". Player 2 can likewise set an
+with the largest minimum, the **maxmin**. Player 2 can likewise set an
 upper bound on his losses by choosing the column with the smallest 
-maximum, the "minmax".
+maximum, the **minmax**.
 
 If the maxmin and minmax happen to be the same number, the game has
 a saddlepoint. Each player should always use the specified strategy,
@@ -159,7 +159,7 @@ and the intersecting payoff is the game's value.
 If the 2xn game does not have a saddlepoint, we move to the next
 check. There may be strategies for player 2 which are obviously bad,
 in the sense that every payoff is worse than for some other strategy.
-We will call such a strategy "dominant" when its payoffs are higher
+We will call such a strategy **dominant** when its payoffs are higher
 than the other's, and assume that an intelligent player 2 would
 never use it.
 
@@ -215,7 +215,7 @@ The book takes several pages to explain the process of computing
 odds and value for a mixed meta-strategy. Rather than do a
 worse job at that, I submit the code.
 
-The mixedSoln_2x2 function calculates the distribution and value
+The `mixedSoln_2x2` function calculates the distribution and value
 for the specified player. It assumes that there is no saddlepoint.
 
 > mixedSoln_2x2 :: Int -> Game2xN -> ((Int, Float), (Int, Float), Float)
@@ -245,7 +245,7 @@ that strategy.
 >     | otherwise     = error (errMsgP p)
 >     where [(_,[a,c]), (_,[b,d])] = payoffs g
 
-In mixedSoln_2x2 we relied on a function to supply the payoffs for 
+In `mixedSoln_2x2` we relied on a function to supply the payoffs for 
 a particular player and strategy, and another to produce the opponent
 given a player.
 
@@ -302,7 +302,7 @@ pair is selected, its indices can be used to find the correct names.
 > g22From2N g (i, j)
 >     | (i `elem` ids) && (j `elem` ids) = g {payoffs = [p2Stg1, p2Stg2]}
 >     | otherwise = error ("Strategies " ++ show i ++ " and " ++ show j ++
->                          " not found in 2xN gameß")
+>                          " not found in 2xN game")
 >     where
 >         ids = map fst (payoffs g)
 >         p2Stg1 = head (filter ((==i) . fst) (payoffs g))
@@ -370,7 +370,7 @@ solution into a more readable form.
 >             (sName p (fst s2) g) ++ 
 >             " (" ++ fmtPct (snd s2) ++ "%)"
 
-The fmtSolution function relies on helpers to determine player 
+The `fmtSolution` function relies on helpers to determine player 
 and strategy names and to format percentages.
 
 > pName :: Int -> Game2xN -> String
@@ -418,7 +418,7 @@ A non-numbered 2x7 example with a mixed-strategy solution:
 
 > mixed2x7 = mkStdGame2xN [(-6),7,(-1),(-2),1,6,4,3,7,(-2),4,(-5),3,7]
 
-Lastly, here's the collection of the examples. Entering "test" at
+Lastly, here's the collection of the examples. Entering `test` at
 the GHCI prompt will solve all of them.
 
 > examples = [
