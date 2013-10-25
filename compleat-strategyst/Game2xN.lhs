@@ -4,7 +4,7 @@ by J.D. Williams.
 Bob Grudem
 10/23/2013
 
-> module CompleatStrategyst.Game2xN where
+> module Game2xN where
 > import Data.List(maximumBy,minimumBy,sortBy)
 
 2 x N Games: Background
