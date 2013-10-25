@@ -221,7 +221,7 @@ for the specified player. It assumes that there is no saddlepoint.
 > mixedSoln_2x2 :: Int -> Game2xN -> ((Int, Float), (Int, Float), Float)
 > mixedSoln_2x2 p g
 >     | not (is2x2 g) = error "odds_2x2 applied to non-2x2 game"
->     | otherwise     = ((i, o1pct), (j, o2pct), v)
+>     | otherwise     = fix ((i, o1pct), (j, o2pct), v)
 >     where
 >         odds@[o1,o2] = odds_2x2 p g
 >         [i,j]  = if p == 1 then [1,2] else map fst (payoffs g)
@@ -230,6 +230,7 @@ for the specified player. It assumes that there is no saddlepoint.
 >         v      = (fromIntegral  n) / d
 >         o1pct  = (fromIntegral o1) / d
 >         o2pct  = (fromIntegral o2) / d
+>         fix r@((x,a),(y,b),v) = if x < y then r else ((y,b),(x,a),v)
 
 See the book for why the odds are calculated as they are. As for how,
 we produce two numbers corresponding to a player's strategies such that
