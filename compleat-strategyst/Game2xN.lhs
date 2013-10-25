@@ -221,9 +221,10 @@ for the specified player. It assumes that there is no saddlepoint.
 > mixedSoln_2x2 :: Int -> Game2xN -> ((Int, Float), (Int, Float), Float)
 > mixedSoln_2x2 p g
 >     | not (is2x2 g) = error "odds_2x2 applied to non-2x2 game"
->     | otherwise     = ((1, o1pct), (2, o2pct), v)
+>     | otherwise     = ((i, o1pct), (j, o2pct), v)
 >     where
 >         odds@[o1,o2] = odds_2x2 p g
+>         [i,j]  = if p == 1 then [1,2] else map fst (payoffs g)
 >         n      = sum (zipWith (*) odds (ps_2x2 (opponent p) 1 g))
 >         d      = fromIntegral (sum odds)
 >         v      = (fromIntegral  n) / d
