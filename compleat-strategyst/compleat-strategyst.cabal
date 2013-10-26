@@ -13,7 +13,7 @@ Cabal-Version:  >= 1.2
 
 Library
     Exposed-Modules: Game2xN
-    Build-Depends:   base
+    Build-Depends:   base, QuickCheck
 
 --Executable trend-analyzer
 --  Build-Depends:  base, OpenGL, parsec, mtl
