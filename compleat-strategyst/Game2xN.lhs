@@ -415,6 +415,44 @@ see certain properties manifested, such as:
 * The value of a 2 x _n_ game to player 1 is the best among all 2 x 2 games
   created from pairs of player 2's strategies.
 
+**Generating Random Games**
+
+At the heart of property-based testing is the generation of random data,
+which here means the payoff matrix. We'll start with a single strategy
+generator, intended to produce a column of the payoff matrix, along with
+a simple property to exercise it.
+
+> strategy :: Int -> Int -> Gen Strategy
+> strategy i n = strategy' i [] n
+
+> strategy' :: Int -> [Int] -> Int -> Gen Strategy
+> strategy' i xs 0 = return (i, xs)
+> strategy' i xs n = do
+>     x <- arbitrary
+>     s <- strategy' i (x:xs) (n - 1)
+>     return s
+
+> prop_numOpposingStrategies :: Property
+> prop_numOpposingStrategies = do
+>     n <- choose (2, 10)
+>     do
+>         collect n $ do
+>             forAll (strategy 1 n) $ \s -> n == length (snd s)
+
+Entering `quickCheck prop_numOpposingStrategies` at the GHCI
+prompt produces output such as the following: 
+
+	*Game2xN> quickCheck prop_numStrategies 
+	+++ OK, passed 100 tests:
+	15% 10
+	14% 5
+	13% 6
+	13% 3
+	12% 7
+	11% 4
+	 9% 8
+	 7% 2
+	 6% 9
 
 
 **Examples**
