@@ -520,17 +520,27 @@ after failure to find a saddlepoint.
 >     where
 >         checkGame g = snd (solution g) == snd (solution g')
 >             where
->                 g' = addP2Strategy s' "" g
->                 s' = map (+1) (snd (head (payoffs g)))
+>                 g' = addP2Strategy ps "" g
+>                 ps = mkDominantStg ((snd . head . payoffs) g)
 
 The `addP2Strategy` function augments a game with a new strategy
 for player 2, and its name.
 
-> addP2Strategy s n g = g { p2StgNames = ns', payoffs = ps' }
+> addP2Strategy :: [Int] -> String -> Game2xN -> Game2xN
+> addP2Strategy ps n g = g { p2StgNames = ns', payoffs = ps' }
 >     where
->         j = length (p2StgNames g) + 1
+>         j   = length (p2StgNames g) + 1
 >         ns' = p2StgNames g ++ [n]
->         ps' = payoffs g ++ [(j,s)]
+>         ps' = payoffs g ++ [(j,ps)]
+
+> mkDominantStg :: [Int] -> [Int]
+> mkDominantStg = map (+1)
+
+If we start by solving a game with a dominant strategy, the solution
+should be the same as when we remove it and solve the result. However,
+this is true only after the game is checked for a saddlepoint. Therefore
+we need another random generator for games with those properties. **Note**
+This requires some careful thinking.
 
 **Examples**
 
