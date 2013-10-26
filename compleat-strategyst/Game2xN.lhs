@@ -6,7 +6,7 @@ from _The Compleat Strategyst_, by J.D. Williams.
 > import Data.List(maximumBy,minimumBy,sortBy)
 > import Test.QuickCheck
 
-Introduction
+**Introduction**
 
 A **game** is a formalized conflict in which there are two players
 with opposing interests. Each player has some number of **strategies**
@@ -44,7 +44,7 @@ and 2 x 2 is a special case within 2 x _n_.
 
 Thus we have the requirements for our main data type.
 
-The `Game2xN` Data Type
+**The `Game2xN` Data Type**
 
 Player 1 has two strategies. Player 2 has _n_. The payoff matrix 
 is represented as a list of columns, i.e. player 2's strategies,
@@ -113,7 +113,7 @@ the game value.
 >                   , solnValue  :: Float
 >               } deriving (Eq, Show)
 
-Solution Plan A: Find a Saddlepoint
+**Solution Plan A: Find a Saddlepoint**
 
 Finding a solution involves a succession of ad hoc checks. 
 
@@ -159,7 +159,7 @@ and the intersecting payoff is the game's value.
 
 > cols = payoffs
 
-Solution Plan B: Eliminate Dominance
+**Solution Plan B: Eliminate Dominance**
 
 If the 2 x _n_ game does not have a saddlepoint, we move to the next
 check. There may be strategies for player 2 which are obviously bad,
@@ -278,7 +278,7 @@ given a player.
 > errMsgPS p s = "Bad player " ++ show p ++ 
 >                " or strategy " ++ show s
 
-Solution Plan C: Compare Subgames
+**Solution Plan C: Compare Subgames**
 
 If the payoff matrix did not reduce to 2 x 2 after eliminating
 dominant strategies for player 2, we fall back on the general
@@ -337,7 +337,7 @@ those.
 > cmpSln (_,(Mixed _ _ _ _ v1)) (_,(Pure _ _ v2))      = compare v1 v2
 > cmpSln (_,(Mixed _ _ _ _ v1)) (_,(Mixed _ _ _ _ v2)) = compare v1 v2
 
-Solution, the Overall Plan
+**Solution, the Overall Plan**
 
 With all the support in place, here is the organizing function
 to solve a 2 x _n_ game. The solution is reported along with the
@@ -396,7 +396,7 @@ and strategy names and to format percentages.
 > fmtPct :: Float -> String
 > fmtPct p = show (round (p * 100))
 
-Property-based Tests
+**Property-based Tests**
 
 Did we get the implementation right? If so, we should be able to
 see certain properties manifested, such as:
@@ -416,7 +416,7 @@ see certain properties manifested, such as:
 
 
 
-Examples
+**Examples**
 
 To make it easier to experiment with the functions above, here I
 include a few of the examples from the book.
