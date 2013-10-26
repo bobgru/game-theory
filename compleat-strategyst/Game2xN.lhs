@@ -442,17 +442,17 @@ a simple property to exercise it.
 Entering `quickCheck prop_numOpposingStrategies` at the GHCI
 prompt produces output such as the following: 
 
-	*Game2xN> quickCheck prop_numStrategies 
-	+++ OK, passed 100 tests:
-	15% 10
-	14% 5
-	13% 6
-	13% 3
-	12% 7
-	11% 4
-	 9% 8
-	 7% 2
-	 6% 9
+    *Game2xN> quickCheck prop_numStrategies 
+    +++ OK, passed 100 tests:
+    15% 10
+    14% 5
+    13% 6
+    13% 3
+    12% 7
+    11% 4
+     9% 8
+     7% 2
+     6% 9
 
 
 **Examples**
