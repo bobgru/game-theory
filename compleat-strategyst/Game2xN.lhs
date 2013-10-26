@@ -484,46 +484,34 @@ and that the strategy indices are 1 through _n_.
 >                 (n == length ss) &&
 >                 [1..n] == sort (map fst ss)
 
-Finally, let's create a list of _n_ games of size 2 x _m_ for _m_
-between 2 and 10. We cannot use `mkStdGame2xN` with a list of `Strategy`,
-so we'll use the following version. The property `prop_numGames` once again
-just verifies the right number of games were produced.
-
-> mkStdTestGame ps = mkGame2xN "p1" "p2" "1-1" "1-2" nms ps
->     where
->         n = length ps
->         nms = ["2-" ++ show i | i <- [1..n]]
+Finally, let's create a game of size 2 x _n_. We cannot use 
+`mkStdGame2xN` with a list of `Strategy`, so we'll make a simple
+variation that does.
 
 > game2xN :: Int -> Gen Game2xN
 > game2xN n = do
 >     ps <- strategies 2 n
 >     return (mkStdTestGame ps)
 
-> games2xN :: Int -> Gen [Game2xN]
-> games2xN n = games2xN' [] n
+> mkStdTestGame ps = mkGame2xN "p1" "p2" "1-1" "1-2" nms ps
+>     where
+>         n   = length ps
+>         nms = ["2-" ++ show i | i <- [1..n]]
 
-> games2xN' gs 0 = return gs
-> games2xN' gs n = do
->     m   <- choose (2, 10)
->     g   <- game2xN m
->     gs' <- games2xN' (g:gs) (n - 1)
->     return gs'
-
-> prop_numGames :: Property
-> prop_numGames = do
->     n <- choose (10, 100)
->     do
->         collect n $ do
->             forAll (games2xN n) $ \gs -> (n == length gs)
+**Testing Solutions**
 
 The first property listed above asserts that the solution to a game
 doesn't change when the game is augmented with a dominant strategy.
+
 If the solution is pure, the saddlepoint won't change when a dominant
 strategy is added for player 2 because its maximum value will be higher
 than at least one other strategy, and hence cannot be the minmax.
 Furthermore, whatever strategy it dominates has a lower payoff in
 each row, hence the added strategy does not contribute a new minimum 
-for player 1 and so does not change the maxmin.
+for player 1 and so does not change the maxmin. 
+
+If the solution is mixed, a dominant strategy will be eliminated
+before continuing.
 
 > prop_addDominant = do
 >     n <- choose (2, 10)
