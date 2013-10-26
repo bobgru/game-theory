@@ -1,10 +1,5 @@
-Solving 2 x N Games 
-===================
-
-according to _The Compleat Strategyst_, by J.D. Williams.
-
-Bob Grudem
-10/23/2013
+###Solving 2 x N Games 
+from _The Compleat Strategyst_, by J.D. Williams.
 
 > module Game2xN where
 > import Data.List(maximumBy,minimumBy,sortBy)
@@ -20,15 +15,15 @@ to do that is a considerable skill, but here we just assume it's
 been done. Another assumption we make is that both players know
 all the payoffs.
 
-The early chapters of the book give recipes for solving 2x2, 2xn,
-and nx2 games, which are implemented in this module.
+The early chapters of the book give recipes for solving 2 x 2, 2 x _n_,
+and _n_ x 2 games, which are implemented in this module.
 
 As some of the examples add colorful interpretations to the
 players and strategies, we'll make room for them in our data type.
 However, most of the examples use a standard setup of Blue as player 1
-and Red as player 2, with strategies numbered starting from 1.
-Blue's strategies are the rows of the matrix, whereas Red's are
-the columns.
+and Red as player 2, with strategies numbered from 1.
+Blue's strategies are rows of the matrix, whereas Red's are
+columns.
 
 Solving a game means determining the combination of strategies
 each player should use to maximize the average payoff over
@@ -37,15 +32,15 @@ solutions indicate a **pure strategy** in which one is always best,
 and some have a **mixed meta-strategy** in which each pure strategy
 is used at random but according to a specified distribution.
 
-Solving 2x2 games is simplest. For 2xn and nx2 games, solving means
-reducing the matrix to 2x2, or possibly a collection of 2x2's, and
+Solving 2 x 2 games is simplest. For 2 x _n_ and _n_ x 2 games, solving means
+reducing the matrix to 2 x 2, or possibly a collection of 2 x 2's, and
 comparing them to find the best value. For simplicity we can represent
-a game as 2xn, because an nx2 game can be transposed into a 2xn,
-and 2x2 is a special case within 2xn.
+a game as 2 x _n_, because an _n_ x 2 game can be transposed into a 2 x _n_,
+and 2 x 2 is a special case within 2 x _n_.
 
 Thus we have the requirements for our main data type.
 
-Player 1 has two strategies. Player 2 has n. The payoff matrix 
+Player 1 has two strategies. Player 2 has _n_. The payoff matrix 
 is represented as a list of columns, i.e. player 2's strategies,
 tagged with strategy number. Player 1's strategies are implicit
 as the collection of all first or of all second entries of the columns.
@@ -74,8 +69,8 @@ the data constructor if we later decide we want that.
 > mkGame2xN = G2N
 
 For games that consist only of a payoff matrix, it will be convenient
-to have the other fields filled in automatically. The ps argument is
-a list of Int, not Strategy, so we have to check that we can create
+to have the other fields filled in automatically. The `ps` argument is
+a list of `Int`, not `Strategy`, so we have to check that we can create
 player 2's strategies from it.
 
 > mkStdGame2xN :: [Int] -> Game2xN
@@ -99,7 +94,7 @@ player 2's strategies from it.
 Given a game, we want to know the solution. A pure strategy is
 represented by the strategy numbers for player 1 and player 2,
 respectively, and the game value. A mixed meta-strategy supplies
-the strategy numbers of the best 2x2 submatrix of payoffs, and
+the strategy numbers of the best 2 x 2 submatrix of payoffs, and
 the percentage of time each strategy should be used, along with
 the game value.
 
@@ -156,7 +151,7 @@ and the intersecting payoff is the game's value.
 
 > cols = payoffs
 
-If the 2xn game does not have a saddlepoint, we move to the next
+If the 2 x _n_ game does not have a saddlepoint, we move to the next
 check. There may be strategies for player 2 which are obviously bad,
 in the sense that every payoff is worse than for some other strategy.
 We will call such a strategy **dominant** when its payoffs are higher
@@ -183,7 +178,7 @@ keep or discard as necessary.
 >     | any ((x `dominates`) . snd) xs =     purgeDominant' xs
 >     | otherwise                      = s : purgeDominant' xs
 
-If the payoff matrix reduces to 2x2 after eliminating dominant
+If the payoff matrix reduces to 2 x 2 after eliminating dominant
 strategies, we have a simple technique for solving it. We'll
 check that frequently, so encapsulate in a function.
 
@@ -273,12 +268,12 @@ given a player.
 > errMsgPS p s = "Bad player " ++ show p ++ 
 >                " or strategy " ++ show s
 
-If the payoff matrix did not reduce to 2x2 after eliminating
+If the payoff matrix did not reduce to 2 x 2 after eliminating
 dominant strategies for player 2, we fall back on the general
-method for solving 2xn games.
+method for solving 2 x _n_ games.
 
 We try each pair of player 2's strategies against player 1's
-to make a 2x2 game. We compare them all and report the minimum
+to make a 2 x 2 game. We compare them all and report the minimum
 value, as we are searching for player 2's optimum meta-strategy.
 
 > pairs :: [a] -> [(a,a)]
@@ -308,10 +303,10 @@ pair is selected, its indices can be used to find the correct names.
 >         p2Stg1 = head (filter ((==i) . fst) (payoffs g))
 >         p2Stg2 = head (filter ((==j) . fst) (payoffs g))
 
-We can now take the smaller 2x2 game involving each pair of 
-player 2's strategies, solve it, and report the most favorable 
+We can now take the smaller 2 x 2 games involving each pair of 
+player 2's strategies, solve them, and report the most favorable 
 as our overall solution. For convenience of further analysis,
-we also report the 2x2 game which won, although the solution
+we also report the 2 x 2 game which won, although the solution
 contains enough information to reconstruct it.
 
 > solution_2xN :: Game2xN -> (Game2xN, Solution)
@@ -331,7 +326,7 @@ those.
 > cmpSln (_,(Mixed _ _ _ _ v1)) (_,(Mixed _ _ _ _ v2)) = compare v1 v2
 
 With all the support in place, here is the organizing function
-to solve a 2xn game. The solution is reported along with the
+to solve a 2 x _n_ game. The solution is reported along with the
 possibly modified game used to find it.
 
 > solution :: Game2xN -> (Game2xN, Solution)
@@ -390,7 +385,7 @@ and strategy names and to format percentages.
 To make it easier to experiment with the functions above, here I
 include a few of the examples from the book.
 
-A non-numbered 2x2 example with a saddlepoint:
+A non-numbered 2 x 2 example with a saddlepoint:
 
 > saddle2x2 = mkStdGame2xN [6, 5, 5, 4]
 
@@ -410,11 +405,11 @@ Example 3. The Dacquiris:
 >                       ["One finger", "Two fingers"]
 >                       [ (1,[55, 10]), (2,[10, 110]) ]
 
-A non-numbered 2x4 example with a saddle point:
+A non-numbered 2 x 4 example with a saddle point:
 
 > saddle2x4 = mkStdGame2xN [1,4,7,8,0,(-1),3,6]
 
-A non-numbered 2x7 example with a mixed-strategy solution:
+A non-numbered 2 x 7 example with a mixed-strategy solution:
 
 > mixed2x7 = mkStdGame2xN [(-6),7,(-1),(-2),1,6,4,3,7,(-2),4,(-5),3,7]
 
