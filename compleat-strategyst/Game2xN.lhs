@@ -404,22 +404,24 @@ see certain properties manifested, such as:
 * A solution to a game with a dominant strategy doesn't change when that
   strategy is eliminated.
 * A solution doesn't change when player 2's strategies are rearranged.
-* The value of a 2 x 2 game to player 1 is the same regardless which
-  strategy player 2 uses, and vice versa.
-* The value of a 2 x _n_ game to player 1 is the best among all 2 x 2 games
-  created from pairs of player 2's strategies.
 * The solution to a 2 x _n_ is the same as that of the 2 x 2 game returned
   with it.
+* A game with a mixed meta-strategy does not have a saddlepoint.
 * The value of a 2 x 2 game is the additive inverse of the value
   of the transposed game, i.e. with players 1 and 2 switched.
-* A game with a mixed meta-strategy does not have a saddlepoint.
+* The value of a 2 x 2 game to player 1 is the same regardless which
+  strategy player 2 uses, and vice versa.
+* The value of a game doesn't change when player 1's strategies are swapped.
+* The value of a 2 x _n_ game to player 1 is the best among all 2 x 2 games
+  created from pairs of player 2's strategies.
 
 
 
 **Examples**
 
 To make it easier to experiment with the functions above, here I
-include a few of the examples from the book.
+include a few of the examples from the book. Enter `solution saddle2x2`
+or `showSolution saddle2x2` at the GHCI prompt to solve the `saddle2x2` game.
 
 A non-numbered 2 x 2 example with a saddlepoint:
 
