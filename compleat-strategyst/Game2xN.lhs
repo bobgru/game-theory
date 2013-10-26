@@ -117,7 +117,7 @@ the game value.
 
 Finding a solution involves a succession of ad hoc checks. 
 
-First, if the game has a Pure solution, the payoff matrix will 
+First, if the game has a pure solution, the payoff matrix will 
 have a **saddlepoint**. Player 1 would like to pick a strategy to
 maximize the payoff to her, but whichever strategy she chooses,
 player 2 may play so as to minimize it. In matrix terms, regardless
@@ -516,7 +516,33 @@ just verifies the right number of games were produced.
 >         collect n $ do
 >             forAll (games2xN n) $ \gs -> (n == length gs)
 
+The first property listed above asserts that the solution to a game
+doesn't change when the game is augmented with a dominant strategy.
+If the solution is pure, the saddlepoint won't change when a dominant
+strategy is added for player 2 because its maximum value will be higher
+than at least one other strategy, and hence cannot be the minmax.
+Furthermore, whatever strategy it dominates has a lower payoff in
+each row, hence the added strategy does not contribute a new minimum 
+for player 1 and so does not change the maxmin.
 
+> prop_addDominant = do
+>     n <- choose (2, 10)
+>     do
+>         collect n $ forAll (game2xN n) $ checkGame
+>     where
+>         checkGame g = snd (solution g) == snd (solution g')
+>             where
+>                 g' = addP2Strategy s' "" g
+>                 s' = map (+1) (snd (head (payoffs g)))
+
+The `addP2Strategy` function augments a game with a new strategy
+for player 2, and its name.
+
+> addP2Strategy s n g = g { p2StgNames = ns', payoffs = ps' }
+>     where
+>         j = length (p2StgNames g) + 1
+>         ns' = p2StgNames g ++ [n]
+>         ps' = payoffs g ++ [(j,s)]
 
 **Examples**
 
