@@ -423,5 +423,5 @@ the GHCI prompt will solve all of them.
 >     , saddle2x4
 >     , mixed2x7
 >     ]
->
+
 > test = mapM_ showSolution examples
