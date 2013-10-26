@@ -510,8 +510,8 @@ Furthermore, whatever strategy it dominates has a lower payoff in
 each row, hence the added strategy does not contribute a new minimum 
 for player 1 and so does not change the maxmin. 
 
-If the solution is mixed, a dominant strategy will be eliminated
-before continuing.
+If the solution is mixed, a dominant strategy will have been eliminated
+after failure to find a saddlepoint.
 
 > prop_addDominant = do
 >     n <- choose (2, 10)
