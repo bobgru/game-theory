@@ -3,7 +3,7 @@ Solving 2 x N Games
 from _The Compleat Strategyst_, by J.D. Williams.
 
 > module Game2xN where
-> import Data.List(maximumBy,minimumBy,sortBy)
+> import Data.List(maximumBy,minimumBy,sortBy,sort)
 > import Test.QuickCheck
 
 **Introduction**
@@ -432,6 +432,11 @@ a simple property to exercise it.
 >     s <- strategy' i (x:xs) (n - 1)
 >     return s
 
+The `prop_numOpposingStrategies` function asserts that for all lengths
+between 2 and 10 the `strategy` function generates a strategy with
+the requested length. The length of a strategy is the number of the
+opponent's strategies.
+
 > prop_numOpposingStrategies :: Property
 > prop_numOpposingStrategies = do
 >     n <- choose (2, 10)
@@ -453,6 +458,64 @@ prompt produces output such as the following:
      9% 8
      7% 2
      6% 9
+
+Now we need a collection of _n_ strategies of length _m_. As we have
+limited our solutions to 2 x _n_, we will always have _m_ = 2. The
+`prop_numStrategies` property produces a matrix between 2 x 2 and 2 x _n_
+for a random _n_ between 2 and 10, checks that the length is correct,
+and that the strategy indices are 1 through _n_.
+
+> strategies :: Int -> Int -> Gen [Strategy]
+> strategies m n = strategies' m [] n
+
+> strategies' :: Int -> [Strategy] -> Int -> Gen [Strategy]
+> strategies' _ ss 0 = return ss
+> strategies' m ss n = do
+>     s <- strategy n m
+>     ss' <- strategies' m (s:ss) (n - 1)
+>     return ss'
+
+> prop_numStrategies :: Property
+> prop_numStrategies = do
+>     n <- choose (2, 10)
+>     do
+>         collect n $ do
+>             forAll (strategies 2 n) $ \ss -> 
+>                 (n == length ss) &&
+>                 [1..n] == sort (map fst ss)
+
+Finally, lets create a list of _n_ games of size 2 x _m_ for _m_
+between 2 and 10. We cannot use `mkStdGame2xN` with a list of `Strategy`,
+so we'll use the following version. The property `prop_numGames` once again
+just verifies the right number of games were produced.
+
+> mkStdTestGame ps = mkGame2xN "p1" "p2" "1-1" "1-2" nms ps
+>     where
+>         n = length ps
+>         nms = ["2-"++show i|i<-[1..n]]
+
+> game2xN :: Int -> Gen Game2xN
+> game2xN n = do
+>     ps <- strategies 2 n
+>     return (mkStdTestGame ps)
+
+> games2xN :: Int -> Gen [Game2xN]
+> games2xN n = games2xN' [] n
+
+> games2xN' gs 0 = return gs
+> games2xN' gs n = do
+>     m <- choose (2, 10)
+>     g <- game2xN m
+>     gs' <- games2xN' (g:gs) (n - 1)
+>     return gs'
+
+> prop_numGames :: Property
+> prop_numGames = do
+>     n <- choose (10, 100)
+>     do
+>         collect n $ do
+>             forAll (games2xN n) $ \gs -> (n == length gs)
+
 
 
 **Examples**
