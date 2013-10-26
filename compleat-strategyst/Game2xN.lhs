@@ -471,7 +471,7 @@ and that the strategy indices are 1 through _n_.
 > strategies' :: Int -> [Strategy] -> Int -> Gen [Strategy]
 > strategies' _ ss 0 = return ss
 > strategies' m ss n = do
->     s <- strategy n m
+>     s   <- strategy n m
 >     ss' <- strategies' m (s:ss) (n - 1)
 >     return ss'
 
@@ -484,7 +484,7 @@ and that the strategy indices are 1 through _n_.
 >                 (n == length ss) &&
 >                 [1..n] == sort (map fst ss)
 
-Finally, lets create a list of _n_ games of size 2 x _m_ for _m_
+Finally, let's create a list of _n_ games of size 2 x _m_ for _m_
 between 2 and 10. We cannot use `mkStdGame2xN` with a list of `Strategy`,
 so we'll use the following version. The property `prop_numGames` once again
 just verifies the right number of games were produced.
@@ -492,7 +492,7 @@ just verifies the right number of games were produced.
 > mkStdTestGame ps = mkGame2xN "p1" "p2" "1-1" "1-2" nms ps
 >     where
 >         n = length ps
->         nms = ["2-"++show i|i<-[1..n]]
+>         nms = ["2-" ++ show i | i <- [1..n]]
 
 > game2xN :: Int -> Gen Game2xN
 > game2xN n = do
@@ -504,8 +504,8 @@ just verifies the right number of games were produced.
 
 > games2xN' gs 0 = return gs
 > games2xN' gs n = do
->     m <- choose (2, 10)
->     g <- game2xN m
+>     m   <- choose (2, 10)
+>     g   <- game2xN m
 >     gs' <- games2xN' (g:gs) (n - 1)
 >     return gs'
 
