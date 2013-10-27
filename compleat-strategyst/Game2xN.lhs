@@ -542,6 +542,43 @@ this is true only after the game is checked for a saddlepoint. Therefore
 we need another random generator for games with those properties. **Note**
 This requires some careful thinking.
 
+A solution should not change if player 2's strategies in the original
+game are rearranged. We need to permute the strategies, re-solve, and
+compare.
+
+> permuteStg g = do
+>     ps <- permute (payoffs g)
+>     return (g { payoffs = ps })
+
+> permute xs = do
+>     n   <- choose (0, (length xs) - 1)
+>     xs' <- permute' xs n
+>     return xs'
+
+> permute' xs 0 = return xs
+> permute' xs n = do
+>     i <- choose (0, (length xs) - 1)
+>     j <- choose (0, (length xs) - 1)
+>     xs' <- permute' (swap i j xs) (n - 1)
+>     return xs'
+
+> swap i j xs
+>     | i >= length xs || j >= length xs = error "bad swap index"
+>     | i == j    = xs
+>     | i > j     = swap j i xs
+>     | otherwise = prefix ++ [(xs!!j)] ++ middle ++ [(xs!!i)] ++ suffix
+>     where
+>         prefix = take i xs
+>         middle = take (j - i - 1) (drop (i + 1) xs)
+>         suffix = drop (j + 1) xs
+
+> prop_permuteStgs = do
+>     n <- choose (2, 10)
+>     do
+>         collect n $ forAll (game2xN n) $ \g -> do
+>             g' <- permuteStg g
+>             return (snd (solution g) == snd (solution g'))
+
 **Examples**
 
 To make it easier to experiment with the functions above, here I
