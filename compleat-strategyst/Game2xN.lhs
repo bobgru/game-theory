@@ -592,6 +592,60 @@ The solution to the latter should be the same.
 >         checkGame g = sln == snd (solution g')
 >             where (g', sln) = solution g
 
+A game with a mixed meta-strategy solution does not have a saddlepoint.
+
+> prop_mixedNoSaddle = do
+>     n <- choose (2, 10)
+>     collect n $ forAll (game2xN n) $ checkGame
+>     where
+>         checkGame g = case snd (solution g) of
+>             Pure _ _ _      -> True
+>             Mixed _ _ _ _ _ -> case saddlePoint g of
+>                 (False, _, _, _) -> True
+>                 otherwise        -> False
+
+The value of a 2 x 2 game is the additive inverse of the value of
+the transposed game, i.e. with player's 1 and 2 switched.
+
+Transposing a 2 x 2 game means changing player 2's columns into rows,
+and multiplying all payoffs by -1, because the convention is that a
+negative payoff benefits player 1, who has just become player 2.
+
+> transpose_2x2 g
+>     | not (is2x2 g) = error "transpose_2x2 applied to non-2x2 game"
+>     | otherwise = g'
+>     where
+>         g' = g {
+>               p1Name     = p2Name g
+>             , p2Name     = p1Name g
+>             , p1Stg1Name = (p2StgNames g) !! (i - 1)
+>             , p1Stg2Name = (p2StgNames g) !! (j - 1)
+>             , p2StgNames = [p1Stg1Name g, p1Stg2Name g]
+>             , payoffs    = [(1,[(-a),(-b)]), (2,[(-c),(-d)])]
+>             }
+>         [(i,[a,c]), (j,[b,d])] = payoffs g
+
+> value g = case snd (solution g) of
+>     Pure _ _ v      -> v
+>     Mixed _ _ _ _ v -> v
+
+> prop_transposedValue = do
+>     n <- choose (2, 2)
+>     collect n $ forAll (game2xN n) $ \g-> 
+>         value g == (-1) * (value (transpose_2x2 g))
+
+**TODO** The value of a game to player 1 is the same regardless which strategy
+player 2 uses.
+
+The value of a game doesn't change when player 1's strategies are swapped.
+
+> prop_p1StgsSwapped = do
+>     n <- choose (2, 10)
+>     collect n $ forAll (game2xN n) $ \g-> 
+>         value g == value (swapP1Stgs g)
+>     where
+>         swapP1Stgs g = g { payoffs = [(i,[b,a]) | (i,[a,b]) <- payoffs g] }
+
 **Examples**
 
 To make it easier to experiment with the functions above, here I
