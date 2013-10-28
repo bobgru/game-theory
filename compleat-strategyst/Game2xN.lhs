@@ -551,6 +551,7 @@ compare.
 * Those with redundant columns and mixed solutions could eliminate
   different dominant columns (because equality is a degenerate form of
   dominance), and therefore report different strategy numbers in the solution.
+
 Fixing the `cmpStg` function to sort by strategy payoffs _then by strategy number_ ensured consistent behavior.
 
 > permuteStg g = do
