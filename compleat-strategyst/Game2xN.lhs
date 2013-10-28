@@ -443,7 +443,8 @@ opponent's strategies.
 >     collect n $ forAll (strategy 1 n) $ \s -> n == length (snd s)
 
 Entering `quickCheck prop_numOpposingStrategies` at the GHCI
-prompt produces output such as the following: 
+prompt produces output such as the following, where the number
+of strategies of a given length is reported:
 
     *Game2xN> quickCheck prop_numStrategies 
     +++ OK, passed 100 tests:
@@ -496,8 +497,7 @@ variation that does.
 
 **Testing Solutions**
 
-The first property listed above asserts that the solution to a game
-doesn't change when the game is augmented with a dominant strategy.
+* A solution doesn't change when a game is augmented with a dominant strategy.
 
 If the solution is pure, the saddlepoint won't change when a dominant
 strategy is added for player 2 because its maximum value will be higher
@@ -531,15 +531,9 @@ for player 2, and its name.
 > mkDominantStg :: [Int] -> [Int]
 > mkDominantStg = map (+1)
 
-If we start by solving a game with a dominant strategy, the solution
-should be the same as when we remove it and solve the result. However,
-this is true only after the game is checked for a saddlepoint. Therefore
-we need another random generator for games with those properties. **Note**
-This requires some careful thinking, so postponing for now.
+* A solution doesn't change when player 2's strategies are rearranged.
 
-A solution should not change if player 2's strategies in the original
-game are rearranged. We need to permute the strategies, re-solve, and
-compare.
+We need to permute the strategies, re-solve, and compare.
 
 **Note** This property was falsified by two types of game:
 * Those with redundant columns and pure solutions could report 
@@ -582,8 +576,8 @@ Fixing the `cmpStg` function to sort by strategy payoffs _then by strategy numbe
 >         g' <- permuteStg g
 >         return (snd (solution g) == snd (solution g'))
 
-A game's solution is reported along with the reduced game used to find it.
-The solution to the latter should be the same.
+* The solution to a 2 x _n_ is the same as that of the 2 x 2 game returned
+  with it.
 
 > prop_reducedSame = do
 >     n <- choose (2, 10)
@@ -592,7 +586,7 @@ The solution to the latter should be the same.
 >         checkGame g = sln == snd (solution g')
 >             where (g', sln) = solution g
 
-A game with a mixed meta-strategy solution does not have a saddlepoint.
+* A game with a mixed meta-strategy does not have a saddlepoint.
 
 > prop_mixedNoSaddle = do
 >     n <- choose (2, 10)
@@ -604,8 +598,8 @@ A game with a mixed meta-strategy solution does not have a saddlepoint.
 >                 (False, _, _, _) -> True
 >                 otherwise        -> False
 
-The value of a 2 x 2 game is the additive inverse of the value of
-the transposed game, i.e. with player's 1 and 2 switched.
+* The value of a 2 x 2 game is the additive inverse of the value
+  of the transposed game, i.e. with players 1 and 2 switched.
 
 Transposing a 2 x 2 game means changing player 2's columns into rows,
 and multiplying all payoffs by -1, because the convention is that a
@@ -634,10 +628,8 @@ negative payoff benefits player 1, who has just become player 2.
 >     collect n $ forAll (game2xN n) $ \g-> 
 >         value g == (-1) * (value (transpose_2x2 g))
 
-**TODO** The value of a game to player 1 is the same regardless which strategy
-player 2 uses.
 
-The value of a game doesn't change when player 1's strategies are swapped.
+* The value of a game doesn't change when player 1's strategies are swapped.
 
 > prop_p1StgsSwapped = do
 >     n <- choose (2, 10)
@@ -645,6 +637,33 @@ The value of a game doesn't change when player 1's strategies are swapped.
 >         value g == value (swapP1Stgs g)
 >     where
 >         swapP1Stgs g = g { payoffs = [(i,[b,a]) | (i,[a,b]) <- payoffs g] }
+
+The following properties are yet to implemented:
+
+* A solution to a game with a dominant strategy doesn't change when that
+  strategy is eliminated.
+* The value of a 2 x 2 game to player 1 is the same regardless which
+  strategy player 2 uses, and vice versa.
+* The value of a 2 x _n_ game to player 1 is the best among all 2 x 2 games
+  created from pairs of player 2's strategies.
+
+Until I learn how to properly integrate property-based testing into 
+`cabal build`, the following will allow running each test once by entering
+`quickCheckAll` at the GHCI prompt, although the output won't be meaningful
+unless one of the properties is falsified.
+
+> properties = [
+>        prop_numOpposingStrategies
+>      , prop_numStrategies
+>      , prop_addDominant
+>      , prop_permuteStgs
+>      , prop_reducedSame
+>      , prop_mixedNoSaddle
+>      , prop_transposedValue
+>      , prop_p1StgsSwapped
+>      ]
+
+> quickCheckAll = mapM_ quickCheck properties
 
 **Examples**
 
