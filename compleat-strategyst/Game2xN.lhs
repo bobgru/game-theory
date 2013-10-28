@@ -146,7 +146,10 @@ and the intersecting payoff is the game's value.
 > rowMaxOfMins g = maximumBy cmpStg mins
 >     where mins = map (\(i,xs)->(i,minimum xs)) (rows g)
 
-> cmpStg (_, x) (_, y) = compare x y
+To guarantee a consistent order in the face of possibly redundant
+strategies, consider first the strategy, then the strategy number.
+
+> cmpStg (i,x) (j,y) = compare (x,i) (y,j)
 
 > colMinOfMaxs :: Game2xN -> (Int, Int)
 > colMinOfMaxs g = minimumBy cmpStg maxs
@@ -177,10 +180,7 @@ keep or discard as necessary.
 > x `dominates` y = and [a >= b | (a,b) <- zip x y]
 
 > purgeDominant :: [Strategy] -> [Strategy]
-> purgeDominant = purgeDominant' . reverse . sortStg
-
-> sortStg :: [Strategy] -> [Strategy]
-> sortStg = sortBy (\(_,x)(_,y)->compare x y)
+> purgeDominant = purgeDominant' . reverse . sortBy cmpStg
 
 > purgeDominant' :: [Strategy] -> [Strategy]
 > purgeDominant' [] = []
@@ -515,8 +515,7 @@ after failure to find a saddlepoint.
 
 > prop_addDominant = do
 >     n <- choose (2, 10)
->     do
->         collect n $ forAll (game2xN n) $ checkGame
+>     collect n $ forAll (game2xN n) $ checkGame
 >     where
 >         checkGame g = snd (solution g) == snd (solution g')
 >             where
@@ -540,7 +539,7 @@ If we start by solving a game with a dominant strategy, the solution
 should be the same as when we remove it and solve the result. However,
 this is true only after the game is checked for a saddlepoint. Therefore
 we need another random generator for games with those properties. **Note**
-This requires some careful thinking.
+This requires some careful thinking, so postponing for now.
 
 A solution should not change if player 2's strategies in the original
 game are rearranged. We need to permute the strategies, re-solve, and
@@ -574,10 +573,19 @@ compare.
 
 > prop_permuteStgs = do
 >     n <- choose (2, 10)
->     do
->         collect n $ forAll (game2xN n) $ \g -> do
->             g' <- permuteStg g
->             return (snd (solution g) == snd (solution g'))
+>     collect n $ forAll (game2xN n) $ \g -> do
+>         g' <- permuteStg g
+>         return (snd (solution g) == snd (solution g'))
+
+A game's solution is reported along with the reduced game used to find it.
+The solution to the latter should be the same.
+
+> prop_reducedSame = do
+>     n <- choose (2, 10)
+>     collect n $ forAll (game2xN n) $ checkGame
+>     where
+>         checkGame g = sln == snd (solution g')
+>             where (g', sln) = solution g
 
 **Examples**
 
