@@ -440,9 +440,7 @@ opponent's strategies.
 > prop_numOpposingStrategies :: Property
 > prop_numOpposingStrategies = do
 >     n <- choose (2, 10)
->     do
->         collect n $ do
->             forAll (strategy 1 n) $ \s -> n == length (snd s)
+>     collect n $ forAll (strategy 1 n) $ \s -> n == length (snd s)
 
 Entering `quickCheck prop_numOpposingStrategies` at the GHCI
 prompt produces output such as the following: 
@@ -478,11 +476,9 @@ and that the strategy indices are 1 through _n_.
 > prop_numStrategies :: Property
 > prop_numStrategies = do
 >     n <- choose (2, 10)
->     do
->         collect n $ do
->             forAll (strategies 2 n) $ \ss -> 
->                 (n == length ss) &&
->                 [1..n] == sort (map fst ss)
+>     collect n $ forAll (strategies 2 n) $ \ss -> 
+>         (n == length ss) &&
+>         [1..n] == sort (map fst ss)
 
 Finally, let's create a game of size 2 x _n_. We cannot use 
 `mkStdGame2xN` with a list of `Strategy`, so we'll make a simple
