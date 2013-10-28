@@ -545,6 +545,14 @@ A solution should not change if player 2's strategies in the original
 game are rearranged. We need to permute the strategies, re-solve, and
 compare.
 
+**Note** This property was falsified by two types of game:
+* Those with redundant columns and pure solutions could report 
+  different columns for maxmin, therefore different solutions.
+* Those with redundant columns and mixed solutions could eliminate
+  different dominant columns (because equality is a degenerate form of
+  dominance), and therefore report different strategy numbers in the solution.
+Fixing the `cmpStg` function to sort by strategy payoffs _then by strategy number_ ensured consistent behavior.
+
 > permuteStg g = do
 >     ps <- permute (payoffs g)
 >     return (g { payoffs = ps })
