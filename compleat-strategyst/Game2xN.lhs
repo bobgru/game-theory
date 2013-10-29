@@ -619,6 +619,8 @@ negative payoff benefits player 1, who has just become player 2.
 >             }
 >         [(i,[a,c]), (j,[b,d])] = payoffs g
 
+We need the value of a game but otherwise don't need the solution.
+
 > value g = case snd (solution g) of
 >     Pure _ _ v      -> v
 >     Mixed _ _ _ _ v -> v
@@ -627,7 +629,6 @@ negative payoff benefits player 1, who has just become player 2.
 >     n <- choose (2, 2)
 >     collect n $ forAll (game2xN n) $ \g-> 
 >         value g == (-1) * (value (transpose_2x2 g))
-
 
 * The value of a game doesn't change when player 1's strategies are swapped.
 
@@ -638,7 +639,7 @@ negative payoff benefits player 1, who has just become player 2.
 >     where
 >         swapP1Stgs g = g { payoffs = [(i,[b,a]) | (i,[a,b]) <- payoffs g] }
 
-The following properties are yet to implemented:
+The following properties are yet to be implemented:
 
 * A solution to a game with a dominant strategy doesn't change when that
   strategy is eliminated.
@@ -647,7 +648,7 @@ The following properties are yet to implemented:
 * The value of a 2 x _n_ game to player 1 is the best among all 2 x 2 games
   created from pairs of player 2's strategies.
 
-Until I learn how to properly integrate property-based testing into 
+Until I learn how to integrate property-based testing into 
 `cabal build`, the following will allow running each test once by entering
 `quickCheckAll` at the GHCI prompt, although the output won't be meaningful
 unless one of the properties is falsified.
