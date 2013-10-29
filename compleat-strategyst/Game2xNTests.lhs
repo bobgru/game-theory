@@ -217,6 +217,11 @@ We need the value of a game but otherwise don't need the solution.
 > prop_p1StgsSwapped = forAll stdGame2xN $ \g-> (value g) `equiv` (value (swapP1Stgs g))
 >     where swapP1Stgs g = g { payoffs = [(i,[b,a]) | (i,[a,b]) <- payoffs g] }
 
+**Note** The last two properties exposed the possibility of `Int` overflow in the
+calculation of `value`. The fix was to change the generic `Int` to `Payoff`, in turn
+aliased to `Integer`. As long as I was doing that, I also defined type synonyms for
+Player and StrategyId.
+
 The following properties are yet to be implemented:
 
 * A solution to a game with a dominant strategy doesn't change when that
