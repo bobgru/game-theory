@@ -12,7 +12,7 @@ Maintainer:     bobgru@hotmail.com
 Cabal-Version:  >= 1.2
 
 Library
-    Exposed-Modules: Game2xN
+    Exposed-Modules: Game2xN, Game2xNTests
     Build-Depends:   base, QuickCheck
 
 --Executable trend-analyzer
