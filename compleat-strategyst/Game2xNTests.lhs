@@ -210,10 +210,8 @@ We need the value of a game but otherwise don't need the solution.
 >     Pure _ _ v      -> v
 >     Mixed _ _ _ _ v -> v
 
-> prop_transposedValue = do
->     n <- choose (2, 2)
->     collect n $ forAll (game2xN n) $ \g-> 
->         value g == (-1) * (value (transpose_2x2 g))
+> prop_transposedValue = forAll (game2xN 2) $ \g-> 
+>     value g == (-1) * (value (transpose_2x2 g))
 
 * The value of a game doesn't change when player 1's strategies are swapped.
 
