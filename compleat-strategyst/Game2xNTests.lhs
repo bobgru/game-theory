@@ -80,7 +80,7 @@ and that the strategy indices are 1 through _n_.
 
 Finally, let's create a game of size 2 x _n_. We cannot use 
 `mkStdGame2xN` with a list of `Strategy`, so we'll make a simple
-variation that does. Going one step further, define `mkStdTestGame` to
+variation that does. Going one step further, define `stdGame2xN` to
 create the kind of game we'll want in most property-based tests.
 
 > game2xN :: Int -> Gen Game2xN
