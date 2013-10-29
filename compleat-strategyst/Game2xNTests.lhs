@@ -220,7 +220,7 @@ We need the value of a game but otherwise don't need the solution.
 **Note** The last two properties exposed the possibility of `Int` overflow in the
 calculation of `value`. The fix was to change the generic `Int` to `Payoff`, in turn
 aliased to `Integer`. As long as I was doing that, I also defined type synonyms for
-Player and StrategyId.
+`Player` and `StrategyId`.
 
 The following properties are yet to be implemented:
 
