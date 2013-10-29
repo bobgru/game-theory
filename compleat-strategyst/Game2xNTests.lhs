@@ -32,7 +32,7 @@ which here means the payoff matrix. We'll start with a single strategy
 generator, intended to produce a column of the payoff matrix, along with
 a simple property to exercise it.
 
-> strategy :: Int -> Int -> Gen Strategy
+> strategy :: StrategyId -> StrategyId -> Gen Strategy
 > strategy i n = do
 >     s <- vector n
 >     return (i, s)
@@ -69,7 +69,7 @@ limited our solutions to 2 x _n_, we will always have _m_ = 2. The
 for a random _n_ between 2 and 10, checks that the length is correct,
 and that the strategy indices are 1 through _n_.
 
-> strategies :: Int -> Int -> Gen [Strategy]
+> strategies :: StrategyId -> StrategyId -> Gen [Strategy]
 > strategies m n = mapM (\i-> strategy i m) [1..n]
 
 > prop_numStrategies :: Property
@@ -83,7 +83,7 @@ Finally, let's create a game of size 2 x _n_. We cannot use
 variation that does. Going one step further, define `stdGame2xN` to
 create the kind of game we'll want in most property-based tests.
 
-> game2xN :: Int -> Gen Game2xN
+> game2xN :: StrategyId -> Gen Game2xN
 > game2xN n = do
 >     ps <- strategies 2 n
 >     return (mkStdTestGame ps)
@@ -120,14 +120,14 @@ after failure to find a saddlepoint.
 The `addP2Strategy` function augments a game with a new strategy
 for player 2, and its name.
 
-> addP2Strategy :: [Int] -> String -> Game2xN -> Game2xN
+> addP2Strategy :: [Payoff] -> String -> Game2xN -> Game2xN
 > addP2Strategy ps n g = g { p2StgNames = ns', payoffs = ps' }
 >     where
 >         j   = length (p2StgNames g) + 1
 >         ns' = p2StgNames g ++ [n]
 >         ps' = payoffs g ++ [(j,ps)]
 
-> mkDominantStg :: [Int] -> [Int]
+> mkDominantStg :: [Payoff] -> [Payoff]
 > mkDominantStg = map (+1)
 
 * A solution doesn't change when player 2's strategies are rearranged.
@@ -206,12 +206,15 @@ We need the value of a game but otherwise don't need the solution.
 >     Pure _ _ v      -> v
 >     Mixed _ _ _ _ v -> v
 
+> x `equiv` y = (abs (x - y)) < epsilon
+>     where epsilon = 1e-6
+
 > prop_transposedValue = forAll (game2xN 2) $ \g-> 
->     value g == (-1) * (value (transpose_2x2 g))
+>     (value g) `equiv` ((-1) * (value (transpose_2x2 g)))
 
 * The value of a game doesn't change when player 1's strategies are swapped.
 
-> prop_p1StgsSwapped = forAll stdGame2xN $ \g-> value g == value (swapP1Stgs g)
+> prop_p1StgsSwapped = forAll stdGame2xN $ \g-> (value g) `equiv` (value (swapP1Stgs g))
 >     where swapP1Stgs g = g { payoffs = [(i,[b,a]) | (i,[a,b]) <- payoffs g] }
 
 The following properties are yet to be implemented:

@@ -6,7 +6,7 @@ from _The Compleat Strategyst_, by J.D. Williams.
 >                , p1Name, p2Name
 >                , p1Stg1Name, p1Stg2Name, p2StgNames
 >                , payoffs
->                , Strategy
+>                , Strategy, Player, StrategyId, Payoff
 >                , mkGame2xN, mkStdGame2xN
 >                , Solution(..)
 >                , solution, showSolution, fmtSolution
@@ -73,7 +73,10 @@ look up any strategy number which might appear in the payoff matrix.
 >     , payoffs    :: [Strategy]
 > } deriving (Eq, Show)
 
-> type Strategy = (Int, [Int])
+> type Strategy   = (StrategyId, [Payoff])
+> type Player     = Int
+> type StrategyId = Int
+> type Payoff     = Integer
 
 We'll need to create games, so define some functions to help.
 The first one doesn't appear to help much, but lets us hide
@@ -88,7 +91,7 @@ to have the other fields filled in automatically. The `ps` argument is
 a list of `Int`, not `Strategy`, so we have to check that we can create
 player 2's strategies from it.
 
-> mkStdGame2xN :: [Int] -> Game2xN
+> mkStdGame2xN :: [Payoff] -> Game2xN
 > mkStdGame2xN ps
 >     | even n = G2N {
 >           p1Name = "Blue"
@@ -113,12 +116,12 @@ the strategy numbers of the best 2 x 2 submatrix of payoffs, and
 the percentage of time each strategy should be used, along with
 the game value.
 
-> data Solution = Pure Int Int Float
+> data Solution = Pure StrategyId StrategyId Float
 >               | Mixed {
->                     p1SolnStg1 :: (Int, Float)
->                   , p1SolnStg2 :: (Int, Float)
->                   , p2SolnStg1 :: (Int, Float)
->                   , p2SolnStg2 :: (Int, Float)
+>                     p1SolnStg1 :: (StrategyId, Float)
+>                   , p1SolnStg2 :: (StrategyId, Float)
+>                   , p2SolnStg1 :: (StrategyId, Float)
+>                   , p2SolnStg2 :: (StrategyId, Float)
 >                   , solnValue  :: Float
 >               } deriving (Eq, Show)
 
@@ -144,6 +147,7 @@ If the maxmin and minmax happen to be the same number, the game has
 a saddlepoint. Each player should always use the specified strategy,
 and the intersecting payoff is the game's value.
 
+> saddlePoint :: Game2xN -> (Bool, Float, StrategyId, StrategyId)
 > saddlePoint g = (b, v, r, c)
 >     where
 >         (r, maxmin) = rowMaxOfMins g
@@ -151,7 +155,7 @@ and the intersecting payoff is the game's value.
 >         b = maxmin == minmax
 >         v = if b then fromIntegral maxmin else 0.0
 
-> rowMaxOfMins :: Game2xN -> (Int, Int)
+> rowMaxOfMins :: Game2xN -> (StrategyId, Payoff)
 > rowMaxOfMins g = maximumBy cmpStg mins
 >     where mins = map (\(i,xs)->(i,minimum xs)) (rows g)
 
@@ -160,7 +164,7 @@ strategies, consider first the strategy, then the strategy number.
 
 > cmpStg (i,x) (j,y) = compare (x,i) (y,j)
 
-> colMinOfMaxs :: Game2xN -> (Int, Int)
+> colMinOfMaxs :: Game2xN -> (StrategyId, Payoff)
 > colMinOfMaxs g = minimumBy cmpStg maxs
 >     where maxs = map (\(i,xs)->(i,maximum xs)) (cols g)
 
@@ -237,7 +241,7 @@ worse job at that, I submit the code.
 The `mixedSoln_2x2` function calculates the distribution and value
 for the specified player. It assumes that there is no saddlepoint.
 
-> mixedSoln_2x2 :: Int -> Game2xN -> ((Int, Float), (Int, Float), Float)
+> mixedSoln_2x2 :: Player -> Game2xN -> ((StrategyId, Float), (StrategyId, Float), Float)
 > mixedSoln_2x2 p g
 >     | not (is2x2 g) = errNon2x2 "odds_2x2"
 >     | otherwise     = fix ((i, o1pct), (j, o2pct), v)
@@ -256,7 +260,7 @@ we produce two numbers corresponding to a player's strategies such that
 either of them over their sum gives the percentage of time to use 
 that strategy.
 
-> odds_2x2 :: Int -> Game2xN -> [Int]
+> odds_2x2 :: Player -> Game2xN -> [Payoff]
 > odds_2x2 p g
 >     | not (is2x2 g) = errNon2x2 "odds_2x2"
 >     | p == 1        = [ abs (c-d), abs (a-b) ]
@@ -268,7 +272,7 @@ In `mixedSoln_2x2` we relied on a function to supply the payoffs for
 a particular player and strategy, and another to produce the opponent
 given a player.
 
-> ps_2x2 :: Int -> Int -> Game2xN -> [Int]
+> ps_2x2 :: Player -> StrategyId -> Game2xN -> [Payoff]
 > ps_2x2 p s g
 >     | not (is2x2 g) = errNon2x2 "ps_2x2"
 >     | otherwise =
@@ -280,15 +284,15 @@ given a player.
 >             otherwise -> error (errMsgPS p s)
 >     where [(_,[a,c]), (_,[b,d])] = payoffs g
 
-> opponent :: Int -> Int
+> opponent :: Player -> Player
 > opponent 1 = 2
 > opponent 2 = 1
 > opponent p = error (errMsgP p)
 
-> errMsgP :: Int -> String
+> errMsgP :: Player -> String
 > errMsgP p = "Bad player number: " ++ show p
 
-> errMsgPS :: Int -> Int -> String
+> errMsgPS :: Player -> StrategyId -> String
 > errMsgPS p s = "Bad player " ++ show p ++ " or strategy " ++ show s
 
 **Solution Plan C: Compare Subgames**
@@ -309,7 +313,7 @@ value, as we are searching for player 2's optimum meta-strategy.
 We only need to pair up the strategy numbers, as we can look up
 the strategy from the game.
 
-> spairs :: Game2xN -> [(Int,Int)]
+> spairs :: Game2xN -> [(StrategyId,StrategyId)]
 > spairs g = pairs ids
 >     where ids = map fst (cols g)
 
@@ -318,7 +322,7 @@ with just those. The payoff matrix must contain the given pair of
 strategies. We leave the strategy name list alone so that whichever
 pair is selected, its indices can be used to find the correct names.
 
-> g22From2N :: Game2xN -> (Int,Int) -> Game2xN
+> g22From2N :: Game2xN -> (StrategyId,StrategyId) -> Game2xN
 > g22From2N g (i, j)
 >     | (i `elem` ids) && (j `elem` ids) = g {payoffs = [p2Stg1, p2Stg2]}
 >     | otherwise = error ("Strategies " ++ show i ++ " and " ++ show j ++
@@ -395,11 +399,11 @@ solution into a more readable form.
 The `fmtSolution` function relies on helpers to determine player 
 and strategy names and to format percentages.
 
-> pName :: Int -> Game2xN -> String
+> pName :: Player -> Game2xN -> String
 > pName 1 = p1Name
 > pName 2 = p2Name
 
-> sName :: Int -> Int -> Game2xN -> String
+> sName :: Player -> StrategyId -> Game2xN -> String
 > sName 1 1 g = p1Stg1Name g
 > sName 1 2 g = p1Stg2Name g
 > sName p s g
