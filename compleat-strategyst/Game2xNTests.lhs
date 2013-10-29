@@ -80,7 +80,8 @@ and that the strategy indices are 1 through _n_.
 
 Finally, let's create a game of size 2 x _n_. We cannot use 
 `mkStdGame2xN` with a list of `Strategy`, so we'll make a simple
-variation that does.
+variation that does. Going one step further, define `mkStdTestGame` to
+create the kind of game we'll want in most property-based tests.
 
 > game2xN :: Int -> Gen Game2xN
 > game2xN n = do
@@ -89,6 +90,11 @@ variation that does.
 
 > mkStdTestGame ps = mkGame2xN "p1" "p2" "1-1" "1-2" nms ps
 >     where nms = ["2-" ++ show i | i <- [1..length ps]]
+
+> stdGame2xN :: Gen Game2xN
+> stdGame2xN = do
+>     n <- choose (2, 10)
+>     game2xN n
 
 **Testing Solutions**
 
@@ -104,9 +110,7 @@ for player 1 and so does not change the maxmin.
 If the solution is mixed, a dominant strategy will have been eliminated
 after failure to find a saddlepoint.
 
-> prop_addDominant = do
->     n <- choose (2, 10)
->     collect n $ forAll (game2xN n) $ checkGame
+> prop_addDominant = forAll stdGame2xN $ checkGame
 >     where
 >         checkGame g = snd (solution g) == snd (solution g')
 >             where
@@ -150,23 +154,18 @@ Fixing the `cmpStg` function to sort by strategy payoffs _then by strategy numbe
 >     xs' <- permute ((take i xs) ++ (drop (i + 1) xs))
 >     return ((xs!!i) : xs')
 
-> prop_permuteStgs = do
->     n <- choose (2, 10)
->     collect n $ forAll (game2xN n) $ \g -> do
->         g' <- permuteStg g
->         return (snd (solution g) == snd (solution g'))
+> prop_permuteStgs = forAll stdGame2xN $ \g -> do
+>     g' <- permuteStg g
+>     return (snd (solution g) == snd (solution g'))
 
 * The solution to a 2 x _n_ is the same as that of the 2 x 2 game returned
   with it.
 
-> prop_reducedSame = do
->     n <- choose (2, 10)
->     collect n $ forAll (game2xN n) $ checkGame
->     where
->         checkGame g = sln == sln'
->             where
->                 (g', sln)  = solution g
->                 (_,  sln') = solution g'
+> prop_reducedSame = forAll stdGame2xN $ checkGame
+>     where checkGame g = sln == sln'
+>               where
+>                   (g', sln)  = solution g
+>                   (_,  sln') = solution g'
 
 * A game with a mixed meta-strategy does not have a saddlepoint.
 
@@ -176,12 +175,9 @@ Fixing the `cmpStg` function to sort by strategy payoffs _then by strategy numbe
 > hasSaddlePoint g = hasSP
 >     where (hasSP, _, _, _)  = saddlePoint g
 
-> prop_mixedNoSaddle = do
->     n <- choose (2, 10)
->     collect n $ forAll (game2xN n) $ checkGame
->     where
->         checkGame g = isPure sln || not (hasSaddlePoint g)
->             where sln = snd (solution g)
+> prop_mixedNoSaddle = forAll stdGame2xN $ checkGame
+>     where checkGame g = isPure sln || not (hasSaddlePoint g)
+>               where sln = snd (solution g)
 
 * The value of a 2 x 2 game is the additive inverse of the value
   of the transposed game, i.e. with players 1 and 2 switched.
@@ -215,11 +211,8 @@ We need the value of a game but otherwise don't need the solution.
 
 * The value of a game doesn't change when player 1's strategies are swapped.
 
-> prop_p1StgsSwapped = do
->     n <- choose (2, 10)
->     collect n $ forAll (game2xN n) $ \g-> value g == value (swapP1Stgs g)
->     where
->         swapP1Stgs g = g { payoffs = [(i,[b,a]) | (i,[a,b]) <- payoffs g] }
+> prop_p1StgsSwapped = forAll stdGame2xN $ \g-> value g == value (swapP1Stgs g)
+>     where swapP1Stgs g = g { payoffs = [(i,[b,a]) | (i,[a,b]) <- payoffs g] }
 
 The following properties are yet to be implemented:
 
