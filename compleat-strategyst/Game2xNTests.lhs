@@ -33,14 +33,9 @@ generator, intended to produce a column of the payoff matrix, along with
 a simple property to exercise it.
 
 > strategy :: Int -> Int -> Gen Strategy
-> strategy i n = strategy' i [] n
-
-> strategy' :: Int -> [Int] -> Int -> Gen Strategy
-> strategy' i xs 0 = return (i, xs)
-> strategy' i xs n = do
->     x <- arbitrary
->     s <- strategy' i (x:xs) (n - 1)
->     return s
+> strategy i n = do
+>     s <- vector n
+>     return (i, s)
 
 The `prop_numOpposingStrategies` function asserts that for all lengths
 between 2 and 10 the `strategy` function generates a strategy with
@@ -56,7 +51,7 @@ Entering `quickCheck prop_numOpposingStrategies` at the GHCI
 prompt produces output such as the following, where the number
 of strategies of a given length is reported:
 
-    *Game2xN> quickCheck prop_numStrategies 
+    *Game2xN> quickCheck prop_numOpposingStrategies 
     +++ OK, passed 100 tests:
     15% 10
     14% 5
@@ -75,21 +70,13 @@ for a random _n_ between 2 and 10, checks that the length is correct,
 and that the strategy indices are 1 through _n_.
 
 > strategies :: Int -> Int -> Gen [Strategy]
-> strategies m n = strategies' m [] n
-
-> strategies' :: Int -> [Strategy] -> Int -> Gen [Strategy]
-> strategies' _ ss 0 = return ss
-> strategies' m ss n = do
->     s   <- strategy n m
->     ss' <- strategies' m (s:ss) (n - 1)
->     return ss'
+> strategies m n = mapM (\i-> strategy i m) [1..n]
 
 > prop_numStrategies :: Property
 > prop_numStrategies = do
 >     n <- choose (2, 10)
 >     collect n $ forAll (strategies 2 n) $ \ss -> 
->         (n == length ss) &&
->         [1..n] == sort (map fst ss)
+>         (n == length ss)  &&  [1..n] == sort (map fst ss)
 
 Finally, let's create a game of size 2 x _n_. We cannot use 
 `mkStdGame2xN` with a list of `Strategy`, so we'll make a simple
@@ -101,9 +88,7 @@ variation that does.
 >     return (mkStdTestGame ps)
 
 > mkStdTestGame ps = mkGame2xN "p1" "p2" "1-1" "1-2" nms ps
->     where
->         n   = length ps
->         nms = ["2-" ++ show i | i <- [1..n]]
+>     where nms = ["2-" ++ show i | i <- [1..length ps]]
 
 **Testing Solutions**
 
@@ -158,27 +143,12 @@ Fixing the `cmpStg` function to sort by strategy payoffs _then by strategy numbe
 >     ps <- permute (payoffs g)
 >     return (g { payoffs = ps })
 
+> permute []  = return []
+> permute [x] = return [x]
 > permute xs = do
->     n   <- choose (0, (length xs) - 1)
->     xs' <- permute' xs n
->     return xs'
-
-> permute' xs 0 = return xs
-> permute' xs n = do
->     i <- choose (0, (length xs) - 1)
->     j <- choose (0, (length xs) - 1)
->     xs' <- permute' (swap i j xs) (n - 1)
->     return xs'
-
-> swap i j xs
->     | i >= length xs || j >= length xs = error "bad swap index"
->     | i == j    = xs
->     | i > j     = swap j i xs
->     | otherwise = prefix ++ [(xs!!j)] ++ middle ++ [(xs!!i)] ++ suffix
->     where
->         prefix = take i xs
->         middle = take (j - i - 1) (drop (i + 1) xs)
->         suffix = drop (j + 1) xs
+>     i   <- choose (0, (length xs) - 1)
+>     xs' <- permute ((take i xs) ++ (drop (i + 1) xs))
+>     return ((xs!!i) : xs')
 
 > prop_permuteStgs = do
 >     n <- choose (2, 10)
@@ -193,20 +163,25 @@ Fixing the `cmpStg` function to sort by strategy payoffs _then by strategy numbe
 >     n <- choose (2, 10)
 >     collect n $ forAll (game2xN n) $ checkGame
 >     where
->         checkGame g = sln == snd (solution g')
->             where (g', sln) = solution g
+>         checkGame g = sln == sln'
+>             where
+>                 (g', sln)  = solution g
+>                 (_,  sln') = solution g'
 
 * A game with a mixed meta-strategy does not have a saddlepoint.
+
+> isPure (Pure _ _ _)  = True
+> isPure _             = False
+
+> hasSaddlePoint g = hasSP
+>     where (hasSP, _, _, _)  = saddlePoint g
 
 > prop_mixedNoSaddle = do
 >     n <- choose (2, 10)
 >     collect n $ forAll (game2xN n) $ checkGame
 >     where
->         checkGame g = case snd (solution g) of
->             Pure _ _ _      -> True
->             Mixed _ _ _ _ _ -> case saddlePoint g of
->                 (False, _, _, _) -> True
->                 otherwise        -> False
+>         checkGame g = isPure sln || not (hasSaddlePoint g)
+>             where sln = snd (solution g)
 
 * The value of a 2 x 2 game is the additive inverse of the value
   of the transposed game, i.e. with players 1 and 2 switched.
@@ -244,8 +219,7 @@ We need the value of a game but otherwise don't need the solution.
 
 > prop_p1StgsSwapped = do
 >     n <- choose (2, 10)
->     collect n $ forAll (game2xN n) $ \g-> 
->         value g == value (swapP1Stgs g)
+>     collect n $ forAll (game2xN n) $ \g-> value g == value (swapP1Stgs g)
 >     where
 >         swapP1Stgs g = g { payoffs = [(i,[b,a]) | (i,[a,b]) <- payoffs g] }
 
