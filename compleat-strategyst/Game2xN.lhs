@@ -1,4 +1,4 @@
-Solving 2 x N Games 
+Solving 2 x N Games
 -------------------
 from _The Compleat Strategyst_, by J.D. Williams.
 
@@ -19,12 +19,12 @@ from _The Compleat Strategyst_, by J.D. Williams.
 
 A **game** is a formalized conflict in which there are two players
 with opposing interests. Each player has some number of **strategies**
-according to which to engage the opponent. Taking all combinations 
+according to which to engage the opponent. Taking all combinations
 of each player's strategies against the other's gives a matrix where
 an entry represents the relative **payoff**. By convention a positive
 payoff means player 1 wins; negative, player 2. _All of the meaning
 of playing the game is encoded into the payoff matrix._ Being able
-to do that is a considerable skill, but here we just assume it's 
+to do that is a considerable skill, but here we just assume it's
 been done. Another assumption we make is that both players know
 all the payoffs.
 
@@ -40,7 +40,7 @@ columns.
 
 Solving a game means determining the combination of strategies
 each player should use to maximize the average payoff over
-time, otherwise known as the **value**. It turns out that some 
+time, otherwise known as the **value**. It turns out that some
 solutions indicate a **pure strategy** in which one is always best,
 and some have a **mixed meta-strategy** in which each pure strategy
 is used at random but according to a specified distribution.
@@ -55,7 +55,7 @@ Thus we have the requirements for our main data type.
 
 **The `Game2xN` Data Type**
 
-Player 1 has two strategies. Player 2 has _n_. The payoff matrix 
+Player 1 has two strategies. Player 2 has _n_. The payoff matrix
 is represented as a list of columns, i.e. player 2's strategies,
 tagged with strategy number. Player 1's strategies are implicit
 as the collection of all first or of all second entries of the columns.
@@ -107,7 +107,7 @@ player 2's strategies from it.
 >         n2 = n `div` 2
 
 > chunk _ [] = []
-> chunk n xs = (take n xs) : (chunk n (drop n xs))
+> chunk n xs = take n xs : chunk n (drop n xs)
 
 Given a game, we want to know the solution. A pure strategy is
 represented by the strategy numbers for player 1 and player 2,
@@ -127,20 +127,20 @@ the game value.
 
 **Solution Plan A: Find a Saddlepoint**
 
-Finding a solution involves a succession of ad hoc checks. 
+Finding a solution involves a succession of ad hoc checks.
 
-First, if the game has a pure solution, the payoff matrix will 
+First, if the game has a pure solution, the payoff matrix will
 have a **saddlepoint**. Player 1 would like to pick a strategy to
 maximize the payoff to her, but whichever strategy she chooses,
 player 2 may play so as to minimize it. In matrix terms, regardless
 the row player 1 selects, player 2 could, and would like to, take
-the minimum value in it. Conversely, player 2 wants the smallest 
-payoff, ideally negative, but runs the risk of player 1 getting 
+the minimum value in it. Conversely, player 2 wants the smallest
+payoff, ideally negative, but runs the risk of player 1 getting
 the maximum from his column.
 
 Player 1 can set a lower bound on her payoff, by using the strategy
 with the largest minimum, the **maxmin**. Player 2 can likewise set an
-upper bound on his losses by choosing the column with the smallest 
+upper bound on his losses by choosing the column with the smallest
 maximum, the **minmax**.
 
 If the maxmin and minmax happen to be the same number, the game has
@@ -169,9 +169,9 @@ strategies, consider first the strategy, then the strategy number.
 >     where maxs = map (\(i,xs)->(i,maximum xs)) (cols g)
 
 > rows g = zip [1..] ss
->     where 
+>     where
 >         ps = payoffs g
->         ss = (map (head . snd) ps) : (map (last . snd) ps) : []
+>         ss = [map (head . snd) ps, map (last . snd) ps]
 
 > cols = payoffs
 
@@ -217,10 +217,10 @@ We again check for a saddlepoint and are done if we find one.
 If none, calculate the distribution according to which
 to use each strategy and report as a mixed meta-strategy.
 
-> solution_2x2 :: Game2xN -> Solution
-> solution_2x2 g
->     | not (is2x2 g) = errNon2x2 "solution_2x2"
->     | otherwise = 
+> solution2x2 :: Game2xN -> Solution
+> solution2x2 g
+>     | not (is2x2 g) = errNon2x2 "solution2x2"
+>     | otherwise =
 >         case saddlePoint g of
 >             (True, v, r, c) -> Pure r c v
 >             otherwise       -> Mixed {
@@ -231,50 +231,50 @@ to use each strategy and report as a mixed meta-strategy.
 >                                 , solnValue  = mv
 >                                 }
 >     where
->         ((p11, pct11), (p12, pct12), mv) = mixedSoln_2x2 1 g
->         ((p21, pct21), (p22, pct22), _)  = mixedSoln_2x2 2 g
+>         ((p11, pct11), (p12, pct12), mv) = mixedSoln2x2 1 g
+>         ((p21, pct21), (p22, pct22), _)  = mixedSoln2x2 2 g
 
 The book takes several pages to explain the process of computing
 odds and value for a mixed meta-strategy. Rather than do a
 worse job at that, I submit the code.
 
-The `mixedSoln_2x2` function calculates the distribution and value
+The `mixedSoln2x2` function calculates the distribution and value
 for the specified player. It assumes that there is no saddlepoint.
 
-> mixedSoln_2x2 :: Player -> Game2xN -> ((StrategyId, Float), (StrategyId, Float), Float)
-> mixedSoln_2x2 p g
->     | not (is2x2 g) = errNon2x2 "odds_2x2"
+> mixedSoln2x2 :: Player -> Game2xN -> ((StrategyId, Float), (StrategyId, Float), Float)
+> mixedSoln2x2 p g
+>     | not (is2x2 g) = errNon2x2 "mixedSoln2x2"
 >     | otherwise     = fix ((i, o1pct), (j, o2pct), v)
 >     where
->         odds@[o1,o2] = odds_2x2 p g
+>         odds@[o1,o2] = odds2x2 p g
 >         [i,j]  = if p == 1 then [1,2] else map fst (payoffs g)
->         n      = sum (zipWith (*) odds (ps_2x2 (opponent p) 1 g))
+>         n      = sum (zipWith (*) odds (ps2x2 (opponent p) 1 g))
 >         d      = fromIntegral (sum odds)
->         v      = (fromIntegral  n) / d
->         o1pct  = (fromIntegral o1) / d
->         o2pct  = (fromIntegral o2) / d
+>         v      = fromIntegral  n / d
+>         o1pct  = fromIntegral o1 / d
+>         o2pct  = fromIntegral o2 / d
 >         fix r@((x,a),(y,b),v) = if x < y then r else ((y,b),(x,a),v)
 
 See the book for why the odds are calculated as they are. As for how,
 we produce two numbers corresponding to a player's strategies such that
-either of them over their sum gives the percentage of time to use 
+either of them over their sum gives the percentage of time to use
 that strategy.
 
-> odds_2x2 :: Player -> Game2xN -> [Payoff]
-> odds_2x2 p g
->     | not (is2x2 g) = errNon2x2 "odds_2x2"
+> odds2x2 :: Player -> Game2xN -> [Payoff]
+> odds2x2 p g
+>     | not (is2x2 g) = errNon2x2 "odds2x2"
 >     | p == 1        = [ abs (c-d), abs (a-b) ]
 >     | p == 2        = [ abs (b-d), abs (a-c) ]
 >     | otherwise     = error (errMsgP p)
 >     where [(_,[a,c]), (_,[b,d])] = payoffs g
 
-In `mixedSoln_2x2` we relied on a function to supply the payoffs for 
+In `mixedSoln2x2` we relied on a function to supply the payoffs for
 a particular player and strategy, and another to produce the opponent
 given a player.
 
-> ps_2x2 :: Player -> StrategyId -> Game2xN -> [Payoff]
-> ps_2x2 p s g
->     | not (is2x2 g) = errNon2x2 "ps_2x2"
+> ps2x2 :: Player -> StrategyId -> Game2xN -> [Payoff]
+> ps2x2 p s g
+>     | not (is2x2 g) = errNon2x2 "ps2x2"
 >     | otherwise =
 >         case (p,s) of
 >             (1,1) -> [a,b]
@@ -332,27 +332,27 @@ pair is selected, its indices can be used to find the correct names.
 >         p2Stg1 = head (filter ((==i) . fst) (cols g))
 >         p2Stg2 = head (filter ((==j) . fst) (cols g))
 
-We can now take the smaller 2 x 2 games involving each pair of 
-player 2's strategies, solve them, and report the most favorable 
+We can now take the smaller 2 x 2 games involving each pair of
+player 2's strategies, solve them, and report the most favorable
 as our overall solution. For convenience of further analysis,
 we also report the 2 x 2 game which won, although the solution
 contains enough information to reconstruct it.
 
-> solution_2xN :: Game2xN -> (Game2xN, Solution)
-> solution_2xN g = minimumBy cmpSln g_slns
+> solution2xN :: Game2xN -> (Game2xN, Solution)
+> solution2xN g = minimumBy cmpSln g_slns
 >     where
->         g22s   = map (g22From2N g) (spairs g)
->         g_slns = map g_sln g22s
->             where g_sln = \g -> (g, solution_2x2 g)
+>         g22s    = map (g22From2N g) (spairs g)
+>         g_slns  = map g_sln g22s
+>         g_sln g = (g, solution2x2 g)
 
 Comparing solutions really means comparing game values, so extract
 those.
 
 > cmpSln :: (Game2xN, Solution) -> (Game2xN, Solution) -> Ordering
-> cmpSln (_,(Pure _ _ v1))      (_,(Pure _ _ v2))      = compare v1 v2
-> cmpSln (_,(Pure _ _ v1))      (_,(Mixed _ _ _ _ v2)) = compare v1 v2
-> cmpSln (_,(Mixed _ _ _ _ v1)) (_,(Pure _ _ v2))      = compare v1 v2
-> cmpSln (_,(Mixed _ _ _ _ v1)) (_,(Mixed _ _ _ _ v2)) = compare v1 v2
+> cmpSln (_,Pure _ _ v1)      (_,Pure _ _ v2)      = compare v1 v2
+> cmpSln (_,Pure _ _ v1)      (_,Mixed _ _ _ _ v2) = compare v1 v2
+> cmpSln (_,Mixed _ _ _ _ v1) (_,Pure _ _ v2)      = compare v1 v2
+> cmpSln (_,Mixed _ _ _ _ v1) (_,Mixed _ _ _ _ v2) = compare v1 v2
 
 **Solution, the Overall Plan**
 
@@ -363,8 +363,8 @@ possibly modified game used to find it.
 > solution :: Game2xN -> (Game2xN, Solution)
 > solution g
 >     | hasSaddlePoint  = (g,   Pure r c v)
->     | is2x2 g'        = (g',  solution_2x2 g')
->     | otherwise       =       solution_2xN g'
+>     | is2x2 g'        = (g',  solution2x2 g')
+>     | otherwise       =       solution2xN g'
 >     where
 >         (hasSaddlePoint, v, r, c) = saddlePoint g
 >         g' = g {payoffs = purgeDominant (payoffs g)}
@@ -376,27 +376,27 @@ solution into a more readable form.
 > showSolution g = putStrLn (fmtSolution (solution g))
 
 > fmtSolution :: (Game2xN, Solution) -> String
-> fmtSolution (g, (Pure p1 p2 v)) = 
->     "Pure strategy: Value = " ++ show v ++ "\n" ++ 
+> fmtSolution (g, Pure p1 p2 v) =
+>     "Pure strategy: Value = " ++ show v ++ "\n" ++
 >     "  " ++ fmtPlayer 1 p1 g ++ "\n" ++
 >     "  " ++ fmtPlayer 2 p2 g
 >     where
 >         fmtPlayer p s g =
->             pName p g ++ ": " ++ (sName p s g)
+>             pName p g ++ ": " ++ sName p s g
 
-> fmtSolution (g, (Mixed p11 p12 p21 p22 v)) =
+> fmtSolution (g, Mixed p11 p12 p21 p22 v) =
 >     "Mixed strategy: Value = " ++  show v ++ "\n" ++
->     (fmtPlayer 1 g p11 p12) ++ "\n" ++
->     (fmtPlayer 2 g p21 p22)
+>     fmtPlayer 1 g p11 p12 ++ "\n" ++
+>     fmtPlayer 2 g p21 p22
 >     where
->         fmtPlayer p g s1 s2 = 
+>         fmtPlayer p g s1 s2 =
 >             pName p g ++ ":\n  " ++
->             (sName p (fst s1) g) ++ 
+>             sName p (fst s1) g ++
 >             " (" ++ fmtPct (snd s1) ++ "%)\n  " ++
->             (sName p (fst s2) g) ++ 
+>             sName p (fst s2) g ++
 >             " (" ++ fmtPct (snd s2) ++ "%)"
 
-The `fmtSolution` function relies on helpers to determine player 
+The `fmtSolution` function relies on helpers to determine player
 and strategy names and to format percentages.
 
 > pName :: Player -> Game2xN -> String
@@ -407,7 +407,7 @@ and strategy names and to format percentages.
 > sName 1 1 g = p1Stg1Name g
 > sName 1 2 g = p1Stg2Name g
 > sName p s g
->     | p == 2 && 0 < s && s <= length (p2StgNames g) = (p2StgNames g) !! (s-1)
+>     | p == 2 && 0 < s && s <= length (p2StgNames g) = p2StgNames g !! (s-1)
 >     | otherwise = error (errMsgPS p s)
 
 > fmtPct :: Float -> String

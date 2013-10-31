@@ -3,7 +3,7 @@ This module is a test driver for `cabal test`.
 We use the `quickCheckAll` function, which is written in Template Haskell
 so that it can generate code after scanning this module for properties.
 
-> {-# LANGUAGE TemplateHaskell #-} 
+> {-# LANGUAGE TemplateHaskell #-}
 
 The module name must be `Main` for `cabal build` to produce an executable,
 which we named as a test suite in our `.cabal` file.
@@ -15,7 +15,8 @@ which we named as a test suite in our `.cabal` file.
 > import System.Exit(exitFailure)
 > import Test.QuickCheck.All(quickCheckAll)
 
-The `main` function is used by `cabal test`.
+I'll credit the **leksah** project for giving me the recipe for this `main`,
+as well as the entries in the `.cabal` file.
 
 > main = do
 >     allPass <- $quickCheckAll

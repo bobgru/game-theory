@@ -1,4 +1,4 @@
-Testing Solutions of 2 x N Games 
+Testing Solutions of 2 x N Games
 --------------------------------
 
 > module Game2xNTests where
@@ -51,7 +51,7 @@ Entering `quickCheck prop_numOpposingStrategies` at the GHCI
 prompt produces output such as the following, where the number
 of strategies of a given length is reported:
 
-    *Game2xN> quickCheck prop_numOpposingStrategies 
+    *Game2xN> quickCheck prop_numOpposingStrategies
     +++ OK, passed 100 tests:
     15% 10
     14% 5
@@ -75,10 +75,10 @@ and that the strategy indices are 1 through _n_.
 > prop_numStrategies :: Property
 > prop_numStrategies = do
 >     n <- choose (2, 10)
->     collect n $ forAll (strategies 2 n) $ \ss -> 
+>     collect n $ forAll (strategies 2 n) $ \ss ->
 >         (n == length ss)  &&  [1..n] == sort (map fst ss)
 
-Finally, let's create a game of size 2 x _n_. We cannot use 
+Finally, let's create a game of size 2 x _n_. We cannot use
 `mkStdGame2xN` with a list of `Strategy`, so we'll make a simple
 variation that does. Going one step further, define `stdGame2xN` to
 create the kind of game we'll want in most property-based tests.
@@ -104,13 +104,13 @@ If the solution is pure, the saddlepoint won't change when a dominant
 strategy is added for player 2 because its maximum value will be higher
 than at least one other strategy, and hence cannot be the minmax.
 Furthermore, whatever strategy it dominates has a lower payoff in
-each row, hence the added strategy does not contribute a new minimum 
-for player 1 and so does not change the maxmin. 
+each row, hence the added strategy does not contribute a new minimum
+for player 1 and so does not change the maxmin.
 
 If the solution is mixed, a dominant strategy will have been eliminated
 after failure to find a saddlepoint.
 
-> prop_addDominant = forAll stdGame2xN $ checkGame
+> prop_addDominant = forAll stdGame2xN checkGame
 >     where
 >         checkGame g = snd (solution g) == snd (solution g')
 >             where
@@ -135,7 +135,7 @@ for player 2, and its name.
 We need to permute the strategies, re-solve, and compare.
 
 **Note** This property was falsified by two types of game:
-* Those with redundant columns and pure solutions could report 
+* Those with redundant columns and pure solutions could report
   different columns for maxmin, therefore different solutions.
 * Those with redundant columns and mixed solutions could eliminate
   different dominant columns (because equality is a degenerate form of
@@ -150,8 +150,8 @@ Fixing the `cmpStg` function to sort by strategy payoffs _then by strategy numbe
 > permute []  = return []
 > permute [x] = return [x]
 > permute xs = do
->     i   <- choose (0, (length xs) - 1)
->     xs' <- permute ((take i xs) ++ (drop (i + 1) xs))
+>     i   <- choose (0, length xs - 1)
+>     xs' <- permute (take i xs ++ drop (i + 1) xs)
 >     return ((xs!!i) : xs')
 
 > prop_permuteStgs = forAll stdGame2xN $ \g -> do
@@ -161,7 +161,7 @@ Fixing the `cmpStg` function to sort by strategy payoffs _then by strategy numbe
 * The solution to a 2 x _n_ is the same as that of the 2 x 2 game returned
   with it.
 
-> prop_reducedSame = forAll stdGame2xN $ checkGame
+> prop_reducedSame = forAll stdGame2xN checkGame
 >     where checkGame g = sln == sln'
 >               where
 >                   (g', sln)  = solution g
@@ -169,13 +169,13 @@ Fixing the `cmpStg` function to sort by strategy payoffs _then by strategy numbe
 
 * A game with a mixed meta-strategy does not have a saddlepoint.
 
-> isPure (Pure _ _ _)  = True
-> isPure _             = False
+> isPure (Pure {})  = True
+> isPure _          = False
 
 > hasSaddlePoint g = hasSP
 >     where (hasSP, _, _, _)  = saddlePoint g
 
-> prop_mixedNoSaddle = forAll stdGame2xN $ checkGame
+> prop_mixedNoSaddle = forAll stdGame2xN checkGame
 >     where checkGame g = isPure sln || not (hasSaddlePoint g)
 >               where sln = snd (solution g)
 
@@ -186,17 +186,17 @@ Transposing a 2 x 2 game means changing player 2's columns into rows,
 and multiplying all payoffs by -1, because the convention is that a
 negative payoff benefits player 1, who has just become player 2.
 
-> transpose_2x2 g
->     | not (is2x2 g) = error "transpose_2x2 applied to non-2x2 game"
+> transpose2x2 g
+>     | not (is2x2 g) = error "transpose2x2 applied to non-2x2 game"
 >     | otherwise = g'
 >     where
 >         g' = g {
 >               p1Name     = p2Name g
 >             , p2Name     = p1Name g
->             , p1Stg1Name = (p2StgNames g) !! (i - 1)
->             , p1Stg2Name = (p2StgNames g) !! (j - 1)
+>             , p1Stg1Name = p2StgNames g !! (i - 1)
+>             , p1Stg2Name = p2StgNames g !! (j - 1)
 >             , p2StgNames = [p1Stg1Name g, p1Stg2Name g]
->             , payoffs    = [(1,[(-a),(-b)]), (2,[(-c),(-d)])]
+>             , payoffs    = [(1,[-a,-b]), (2,[-c,-d])]
 >             }
 >         [(i,[a,c]), (j,[b,d])] = payoffs g
 
@@ -206,15 +206,15 @@ We need the value of a game but otherwise don't need the solution.
 >     Pure _ _ v      -> v
 >     Mixed _ _ _ _ v -> v
 
-> x `equiv` y = (abs (x - y)) < epsilon
+> x `equiv` y = abs (x - y) < epsilon
 >     where epsilon = 1e-6
 
 > prop_transposedValue = forAll (game2xN 2) $ \g->
->     (value g) `equiv` ((-1) * (value (transpose_2x2 g)))
+>     value g `equiv` ((-1) * value (transpose2x2 g))
 
 * The value of a game doesn't change when player 1's strategies are swapped.
 
-> prop_p1StgsSwapped = forAll stdGame2xN $ \g-> (value g) `equiv` (value (swapP1Stgs g))
+> prop_p1StgsSwapped = forAll stdGame2xN $ \g-> value g `equiv` value (swapP1Stgs g)
 >     where swapP1Stgs g = g { payoffs = [(i,[b,a]) | (i,[a,b]) <- payoffs g] }
 
 **Note** The last two properties exposed the possibility of `Int` overflow in the
@@ -259,11 +259,11 @@ Example 3. The Dacquiris:
 
 A non-numbered 2 x 4 example with a saddle point:
 
-> saddle2x4 = mkStdGame2xN [1,4,7,8,0,(-1),3,6]
+> saddle2x4 = mkStdGame2xN [1,4,7,8,0,-1,3,6]
 
 A non-numbered 2 x 7 example with a mixed-strategy solution:
 
-> mixed2x7 = mkStdGame2xN [(-6),7,(-1),(-2),1,6,4,3,7,(-2),4,(-5),3,7]
+> mixed2x7 = mkStdGame2xN [-6,7,-1,-2,1,6,4,3,7,-2,4,-5,3,7]
 
 Lastly, here's the collection of the examples. Entering `test` at
 the GHCI prompt will solve all of them.
