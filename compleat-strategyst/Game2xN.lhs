@@ -88,7 +88,7 @@ the data constructor.
 
 For games that consist only of a payoff matrix, it will be convenient
 to have the other fields filled in automatically. The `ps` argument is
-a list of `Int`, not `Strategy`, so we have to check that we can create
+a list of `Payoff`, not `Strategy`, so we have to check that we can create
 player 2's strategies from it.
 
 > mkStdGame2xN :: [Payoff] -> Game2xN
