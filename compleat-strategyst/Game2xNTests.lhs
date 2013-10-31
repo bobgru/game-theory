@@ -265,7 +265,7 @@ A non-numbered 2 x 7 example with a mixed-strategy solution:
 
 > mixed2x7 = mkStdGame2xN [-6,7,-1,-2,1,6,4,3,7,-2,4,-5,3,7]
 
-Lastly, here's the collection of the examples. Entering `test` at
+Lastly, here's the collection of the examples. Entering `showExamples` at
 the GHCI prompt will solve all of them.
 
 > examples = [
@@ -276,4 +276,4 @@ the GHCI prompt will solve all of them.
 >     , mixed2x7
 >     ]
 
-> test = mapM_ showSolution examples
+> showExamples = mapM_ showSolution examples
