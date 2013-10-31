@@ -209,7 +209,7 @@ We need the value of a game but otherwise don't need the solution.
 > x `equiv` y = (abs (x - y)) < epsilon
 >     where epsilon = 1e-6
 
-> prop_transposedValue = forAll (game2xN 2) $ \g-> 
+> prop_transposedValue = forAll (game2xN 2) $ \g->
 >     (value g) `equiv` ((-1) * (value (transpose_2x2 g)))
 
 * The value of a game doesn't change when player 1's strategies are swapped.
@@ -230,24 +230,6 @@ The following properties are yet to be implemented:
   strategy player 2 uses, and vice versa.
 * The value of a 2 x _n_ game to player 1 is the best among all 2 x 2 games
   created from pairs of player 2's strategies.
-
-Until I learn how to integrate property-based testing into 
-`cabal build`, the following will allow running each test once by entering
-`quickCheckAll` at the GHCI prompt, although the output won't be meaningful
-unless one of the properties is falsified.
-
-> properties = [
->        prop_numOpposingStrategies
->      , prop_numStrategies
->      , prop_addDominant
->      , prop_permuteStgs
->      , prop_reducedSame
->      , prop_mixedNoSaddle
->      , prop_transposedValue
->      , prop_p1StgsSwapped
->      ]
-
-> quickCheckAll = mapM_ quickCheck properties
 
 **Examples**
 
