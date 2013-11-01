@@ -14,6 +14,7 @@ from _The Compleat Strategyst_, by J.D. Williams.
 >                )
 > where
 > import Data.List(maximumBy,minimumBy,sortBy)
+> import Control.Arrow(second)
 
 **Introduction**
 
@@ -118,11 +119,11 @@ the game value.
 
 > data Solution = Pure StrategyId StrategyId Float
 >               | Mixed {
->                     p1SolnStg1 :: (StrategyId, Float)
->                   , p1SolnStg2 :: (StrategyId, Float)
->                   , p2SolnStg1 :: (StrategyId, Float)
->                   , p2SolnStg2 :: (StrategyId, Float)
->                   , solnValue  :: Float
+>                     p1SlnStg1 :: (StrategyId, Float)
+>                   , p1SlnStg2 :: (StrategyId, Float)
+>                   , p2SlnStg1 :: (StrategyId, Float)
+>                   , p2SlnStg2 :: (StrategyId, Float)
+>                   , slnValue  :: Float
 >               } deriving (Eq, Show)
 
 **Solution Plan A: Find a Saddlepoint**
@@ -157,7 +158,7 @@ and the intersecting payoff is the game's value.
 
 > rowMaxOfMins :: Game2xN -> (StrategyId, Payoff)
 > rowMaxOfMins g = maximumBy cmpStg mins
->     where mins = map (\(i,xs)->(i,minimum xs)) (rows g)
+>     where mins = map (second minimum) (rows g)
 
 To guarantee a consistent order in the face of possibly redundant
 strategies, consider first the strategy, then the strategy number.
@@ -166,7 +167,7 @@ strategies, consider first the strategy, then the strategy number.
 
 > colMinOfMaxs :: Game2xN -> (StrategyId, Payoff)
 > colMinOfMaxs g = minimumBy cmpStg maxs
->     where maxs = map (\(i,xs)->(i,maximum xs)) (cols g)
+>     where maxs = map (second maximum) (cols g)
 
 > rows g = zip [1..] ss
 >     where
@@ -193,7 +194,7 @@ keep or discard as necessary.
 > x `dominates` y = and [a >= b | (a,b) <- zip x y]
 
 > purgeDominant :: [Strategy] -> [Strategy]
-> purgeDominant = purgeDominant' . reverse . sortBy cmpStg
+> purgeDominant = purgeDominant' . sortBy (flip cmpStg)
 
 > purgeDominant' :: [Strategy] -> [Strategy]
 > purgeDominant' [] = []
@@ -224,26 +225,27 @@ to use each strategy and report as a mixed meta-strategy.
 >         case saddlePoint g of
 >             (True, v, r, c) -> Pure r c v
 >             otherwise       -> Mixed {
->                                   p1SolnStg1 = (p11, pct11)
->                                 , p1SolnStg2 = (p12, pct12)
->                                 , p2SolnStg1 = (p21, pct21)
->                                 , p2SolnStg2 = (p22, pct22)
->                                 , solnValue  = mv
+>                                   p1SlnStg1 = (p11, pct11)
+>                                 , p1SlnStg2 = (p12, pct12)
+>                                 , p2SlnStg1 = (p21, pct21)
+>                                 , p2SlnStg2 = (p22, pct22)
+>                                 , slnValue  = mv
 >                                 }
 >     where
->         ((p11, pct11), (p12, pct12), mv) = mixedSoln2x2 1 g
->         ((p21, pct21), (p22, pct22), _)  = mixedSoln2x2 2 g
+>         ((p11, pct11), (p12, pct12), mv) = mixedSln2x2 1 g
+>         ((p21, pct21), (p22, pct22), _)  = mixedSln2x2 2 g
 
 The book takes several pages to explain the process of computing
 odds and value for a mixed meta-strategy. Rather than do a
 worse job at that, I submit the code.
 
-The `mixedSoln2x2` function calculates the distribution and value
+The `mixedSln2x2` function calculates the distribution and value
 for the specified player. It assumes that there is no saddlepoint.
 
-> mixedSoln2x2 :: Player -> Game2xN -> ((StrategyId, Float), (StrategyId, Float), Float)
-> mixedSoln2x2 p g
->     | not (is2x2 g) = errNon2x2 "mixedSoln2x2"
+> mixedSln2x2 :: Player -> Game2xN
+>             -> ((StrategyId, Float), (StrategyId, Float), Float)
+> mixedSln2x2 p g
+>     | not (is2x2 g) = errNon2x2 "mixedSln2x2"
 >     | otherwise     = fix ((i, o1pct), (j, o2pct), v)
 >     where
 >         odds@[o1,o2] = odds2x2 p g
@@ -268,7 +270,7 @@ that strategy.
 >     | otherwise     = error (errMsgP p)
 >     where [(_,[a,c]), (_,[b,d])] = payoffs g
 
-In `mixedSoln2x2` we relied on a function to supply the payoffs for
+In `mixedSln2x2` we relied on a function to supply the payoffs for
 a particular player and strategy, and another to produce the opponent
 given a player.
 

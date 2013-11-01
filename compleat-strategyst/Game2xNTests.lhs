@@ -70,7 +70,7 @@ for a random _n_ between 2 and 10, checks that the length is correct,
 and that the strategy indices are 1 through _n_.
 
 > strategies :: StrategyId -> StrategyId -> Gen [Strategy]
-> strategies m n = mapM (\i-> strategy i m) [1..n]
+> strategies m n = mapM (`strategy` m) [1..n]
 
 > prop_numStrategies :: Property
 > prop_numStrategies = do
@@ -111,8 +111,7 @@ If the solution is mixed, a dominant strategy will have been eliminated
 after failure to find a saddlepoint.
 
 > prop_addDominant = forAll stdGame2xN checkGame
->     where
->         checkGame g = snd (solution g) == snd (solution g')
+>     where checkGame g = snd (solution g) == snd (solution g')
 >             where
 >                 g' = addP2Strategy ps "" g
 >                 ps = mkDominantStg ((snd . head . payoffs) g)
@@ -163,9 +162,9 @@ Fixing the `cmpStg` function to sort by strategy payoffs _then by strategy numbe
 
 > prop_reducedSame = forAll stdGame2xN checkGame
 >     where checkGame g = sln == sln'
->               where
->                   (g', sln)  = solution g
->                   (_,  sln') = solution g'
+>             where
+>                 (g', sln)  = solution g
+>                 (_,  sln') = solution g'
 
 * A game with a mixed meta-strategy does not have a saddlepoint.
 
@@ -177,7 +176,7 @@ Fixing the `cmpStg` function to sort by strategy payoffs _then by strategy numbe
 
 > prop_mixedNoSaddle = forAll stdGame2xN checkGame
 >     where checkGame g = isPure sln || not (hasSaddlePoint g)
->               where sln = snd (solution g)
+>             where sln = snd (solution g)
 
 * The value of a 2 x 2 game is the additive inverse of the value
   of the transposed game, i.e. with players 1 and 2 switched.
