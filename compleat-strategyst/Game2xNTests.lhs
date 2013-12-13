@@ -182,8 +182,10 @@ Fixing the `cmpStg` function to sort by strategy payoffs _then by strategy numbe
   of the transposed game, i.e. with players 1 and 2 switched.
 
 Transposing a 2 x 2 game means changing player 2's columns into rows,
-and multiplying all payoffs by -1, because the convention is that a
-negative payoff benefits player 1, who has just become player 2.
+and multiplying all payoffs by -1. The convention is that a
+positive payoff benefits player 1, who has just become player 2.
+A positively valued game must therefore be transposed into a negatively
+valued one to preserve the outcome.
 
 > transpose2x2 g
 >     | not (is2x2 g) = error "transpose2x2 applied to non-2x2 game"
