@@ -21,7 +21,7 @@ Library
 
 Test-Suite test-game2xN
   Type:           exitcode-stdio-1.0
-  Main-Is:        TestDriver.lhs
+  Main-Is:        TestDriver.hs
   Buildable:      True
   Build-Depends:  base -any, QuickCheck -any
   hs-source-dirs: .
