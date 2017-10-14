@@ -1,9 +1,21 @@
 -- Testing Solutions of 2 x N Games
 
-module Game2xNTests where
+{-# LANGUAGE TemplateHaskell #-}
+module Main where
 import Game2xN
 import Data.List(sort)
 import Test.QuickCheck
+
+import Control.Monad(unless)
+import System.Exit(exitFailure)
+import Test.QuickCheck.All(quickCheckAll)
+
+-- Run all tests with "stack test".
+-- 
+-- Run interactively with "stack ghci --test" which brings the tests
+-- into scope, then entering something like "quickCheck prop_<TAB>"
+-- to see which tests are available.
+
 
 -- Property-based Tests
 -- 
@@ -41,9 +53,8 @@ strategy i n = do
 -- the requested length. The length of a strategy is the number of the
 -- opponent's strategies.
 
-prop_numOpposingStrategies :: Property
-prop_numOpposingStrategies = do
-    n <- choose (2, 10)
+prop_numOpposingStrategies :: Int -> Property
+prop_numOpposingStrategies n = (n > 1) ==> do
     collect n $ forAll (strategy 1 n) $ \s -> n == length (snd s)
 
 -- Entering 'quickCheck prop_numOpposingStrategies' at the GHCI
@@ -65,15 +76,14 @@ prop_numOpposingStrategies = do
 -- Now we need a collection of n strategies of length m. As we have
 -- limited our solutions to 2 x n, we will always have m = 2. The
 -- prop_numStrategies property produces a matrix between 2 x 2 and 2 x n
--- for a random n between 2 and 10, checks that the length is correct,
+-- for a random n at least 2, checks that the length is correct,
 -- and that the strategy indices are 1 through n.
 
 strategies :: StrategyId -> StrategyId -> Gen [Strategy]
 strategies m n = mapM (`strategy` m) [1..n]
 
-prop_numStrategies :: Property
-prop_numStrategies = do
-    n <- choose (2, 10)
+prop_numStrategies :: Int -> Property
+prop_numStrategies n = (n > 1) ==> do
     collect n $ forAll (strategies 2 n) $ \ss ->
         (n == length ss)  &&  [1..n] == sort (map fst ss)
 
@@ -277,3 +287,18 @@ examples = [
     ]
 
 showExamples = mapM_ showSolution examples
+
+-- The following "return []" is a necessary hack
+-- to help template haskell (see haddock docs for
+-- Test.QuickCheck.All).
+--
+-- I found that even with the hack, quickCheckAll
+-- would only find the tests within the same
+-- module as itself.
+return []
+runTests = $quickCheckAll
+
+main = do
+    allPass <- runTests
+    unless allPass exitFailure
+

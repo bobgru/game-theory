@@ -9,19 +9,18 @@ License:        BSD3
 Build-Type:     Simple
 Author:         Bob Grudem
 Maintainer:     bobgru@hotmail.com
-Cabal-Version:  >= 1.2
+Cabal-Version:  >= 1.8
 
 Library
-    Exposed-Modules: Game2xN, Game2xNTests
-    Build-Depends:   base, QuickCheck
-
---Executable trend-analyzer
---  Build-Depends:  base, OpenGL, parsec, mtl
---  Main-Is:        SimRunner.hs
+  Exposed-Modules: Game2xN
+  Build-Depends:   base -any
 
 Test-Suite test-game2xN
   Type:           exitcode-stdio-1.0
-  Main-Is:        TestDriver.hs
+  Main-Is:        Game2xNTests.hs
   Buildable:      True
-  Build-Depends:  base -any, QuickCheck -any
+  Build-Depends:  base
+                , QuickCheck
+                , compleat-strategyst
   hs-source-dirs: .
+  Other-Modules:  Game2xN
