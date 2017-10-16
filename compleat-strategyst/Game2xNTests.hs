@@ -53,8 +53,13 @@ strategy i n = do
 -- the requested length. The length of a strategy is the number of the
 -- opponent's strategies.
 
-prop_numOpposingStrategies :: Int -> Property
-prop_numOpposingStrategies n = (n > 1) ==> do
+data Int2To10 = Int2To10 Int deriving (Show, Eq)
+
+instance Arbitrary Int2To10 where
+  arbitrary = Int2To10 <$> choose (2, 10)
+
+prop_numOpposingStrategies :: Int2To10 -> Property
+prop_numOpposingStrategies (Int2To10 n) = do
     collect n $ forAll (strategy 1 n) $ \s -> n == length (snd s)
 
 -- Entering 'quickCheck prop_numOpposingStrategies' at the GHCI
@@ -82,8 +87,8 @@ prop_numOpposingStrategies n = (n > 1) ==> do
 strategies :: StrategyId -> StrategyId -> Gen [Strategy]
 strategies m n = mapM (`strategy` m) [1..n]
 
-prop_numStrategies :: Int -> Property
-prop_numStrategies n = (n > 1) ==> do
+prop_numStrategies :: Int2To10 -> Property
+prop_numStrategies (Int2To10 n) = do
     collect n $ forAll (strategies 2 n) $ \ss ->
         (n == length ss)  &&  [1..n] == sort (map fst ss)
 
